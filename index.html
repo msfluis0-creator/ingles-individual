@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ingles individual</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
         body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f5;height:100vh;overflow:hidden}
@@ -50,6 +51,7 @@
         table th{background:#f5f5f5;padding:10px;text-align:left;font-weight:600;border-bottom:1px solid #e5e5ea}
         table td{padding:10px;border-bottom:1px solid #e5e5ea}
         table tr:hover{background:#f5f5f5}
+        .loading{text-align:center;color:#999;padding:20px}
     </style>
 </head>
 <body>
@@ -129,7 +131,7 @@
             <div id="prospects" class="tab-pane">
                 <div class="section">
                     <h3>Mis Prospectos</h3>
-                    <div id="prospects-list"></div>
+                    <div id="prospects-list" class="loading">Cargando...</div>
                 </div>
             </div>
 
@@ -159,7 +161,7 @@
                 </div>
                 <div class="section">
                     <h3>Historial de Llamadas</h3>
-                    <div id="calls-list"></div>
+                    <div id="calls-list" class="loading">Cargando...</div>
                 </div>
             </div>
 
@@ -195,7 +197,7 @@
                 </div>
                 <div class="section">
                     <h3>Mis Citas</h3>
-                    <div id="appointments-list"></div>
+                    <div id="appointments-list" class="loading">Cargando...</div>
                 </div>
             </div>
 
@@ -224,7 +226,7 @@
                 </div>
                 <div class="section">
                     <h3>Informaciones Dadas</h3>
-                    <div id="infos-list"></div>
+                    <div id="infos-list" class="loading">Cargando...</div>
                 </div>
             </div>
 
@@ -268,7 +270,7 @@
                 </div>
                 <div class="section">
                     <h3>Cierres Registrados</h3>
-                    <div id="closures-list"></div>
+                    <div id="closures-list" class="loading">Cargando...</div>
                 </div>
             </div>
 
@@ -299,7 +301,9 @@
                                 <th>% Cierre</th>
                             </tr>
                         </thead>
-                        <tbody id="admin-table"></tbody>
+                        <tbody id="admin-table">
+                            <tr><td colspan="4" class="loading">Cargando...</td></tr>
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -307,21 +311,18 @@
     </div>
 
     <script>
+        const SUPABASE_URL = 'https://yduipgjijwepkwlcvntc.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_JVByUBRj-6ixEbRNGHAbPQ_MqyjSLt9';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
         let currentUser = null;
-        let vendors = JSON.parse(localStorage.getItem('ii_vendors')) || [];
-        let prospects = JSON.parse(localStorage.getItem('ii_prospects')) || [];
-        let calls = JSON.parse(localStorage.getItem('ii_calls')) || [];
-        let appointments = JSON.parse(localStorage.getItem('ii_appointments')) || [];
-        let infos = JSON.parse(localStorage.getItem('ii_infos')) || [];
-        let closures = JSON.parse(localStorage.getItem('ii_closures')) || [];
 
-        function saveData() {
-            localStorage.setItem('ii_vendors', JSON.stringify(vendors));
-            localStorage.setItem('ii_prospects', JSON.stringify(prospects));
-            localStorage.setItem('ii_calls', JSON.stringify(calls));
-            localStorage.setItem('ii_appointments', JSON.stringify(appointments));
-            localStorage.setItem('ii_infos', JSON.stringify(infos));
-            localStorage.setItem('ii_closures', JSON.stringify(closures));
+        async function initDB() {
+            try {
+                await supabase.from('vendors').select('*').limit(1);
+            } catch (e) {
+                console.log('Tables will be created on first use');
+            }
         }
 
         // Tab switching in login
@@ -336,20 +337,24 @@
         });
 
         // Login
-        document.getElementById('login-vendor-btn').addEventListener('click', function() {
+        document.getElementById('login-vendor-btn').addEventListener('click', async function() {
             const name = document.getElementById('vname').value.trim();
             const code = document.getElementById('vcode').value.trim();
             if (!name || !code) {
                 alert('Completa los campos');
                 return;
             }
-            const found = vendors.find(v => v.code === code);
-            if (!found) {
-                alert('Código incorrecto');
-                return;
+            try {
+                const { data, error } = await supabase.from('vendors').select('*').eq('code', code);
+                if (error || !data || data.length === 0) {
+                    alert('Código incorrecto');
+                    return;
+                }
+                currentUser = { name, code, type: 'vendor' };
+                showApp();
+            } catch (e) {
+                alert('Error: ' + e.message);
             }
-            currentUser = { name, code, type: 'vendor' };
-            showApp();
         });
 
         document.getElementById('login-admin-btn').addEventListener('click', function() {
@@ -391,90 +396,95 @@
         }
 
         // Forms
-        document.getElementById('form-prospect').addEventListener('submit', function(e) {
+        document.getElementById('form-prospect').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const p = {
-                id: Date.now(),
-                vendor: currentUser.code,
-                name: document.getElementById('p-name').value.trim(),
-                phone: document.getElementById('p-phone').value.trim(),
-                date: new Date().toISOString().split('T')[0]
-            };
-            prospects.push(p);
-            saveData();
-            showMsg('✓ Prospecto registrado', 'success');
-            this.reset();
-            loadVendorData();
+            try {
+                const { error } = await supabase.from('prospects').insert([{
+                    vendor: currentUser.code,
+                    name: document.getElementById('p-name').value.trim(),
+                    phone: document.getElementById('p-phone').value.trim()
+                }]);
+                if (error) throw error;
+                showMsg('✓ Prospecto registrado', 'success');
+                this.reset();
+                loadVendorData();
+            } catch (e) {
+                showMsg('Error: ' + e.message, 'error');
+            }
         });
 
-        document.getElementById('form-call').addEventListener('submit', function(e) {
+        document.getElementById('form-call').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const pid = document.getElementById('call-prospect').value;
-            const p = prospects.find(x => x.id == pid);
-            if (!p) {
-                alert('Selecciona prospecto');
-                return;
+            try {
+                const pid = document.getElementById('call-prospect').value;
+                const { data: pdata } = await supabase.from('prospects').select('name').eq('id', pid);
+                if (!pdata || pdata.length === 0) {
+                    alert('Selecciona prospecto');
+                    return;
+                }
+                const { error } = await supabase.from('calls').insert([{
+                    vendor: currentUser.code,
+                    prospect_id: pid,
+                    prospect_name: pdata[0].name,
+                    result: document.getElementById('call-result').value
+                }]);
+                if (error) throw error;
+                showMsg('✓ Llamada registrada', 'success');
+                this.reset();
+                loadVendorData();
+            } catch (e) {
+                showMsg('Error: ' + e.message, 'error');
             }
-            const c = {
-                id: Date.now(),
-                vendor: currentUser.code,
-                pid: pid,
-                pname: p.name,
-                result: document.getElementById('call-result').value,
-                date: new Date().toISOString().split('T')[0]
-            };
-            calls.push(c);
-            saveData();
-            showMsg('✓ Llamada registrada', 'success');
-            this.reset();
-            loadVendorData();
         });
 
-        document.getElementById('form-appointment').addEventListener('submit', function(e) {
+        document.getElementById('form-appointment').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const pid = document.getElementById('apt-prospect').value;
-            const p = prospects.find(x => x.id == pid);
-            if (!p) {
-                alert('Selecciona prospecto');
-                return;
+            try {
+                const pid = document.getElementById('apt-prospect').value;
+                const { data: pdata } = await supabase.from('prospects').select('name').eq('id', pid);
+                if (!pdata || pdata.length === 0) {
+                    alert('Selecciona prospecto');
+                    return;
+                }
+                const { error } = await supabase.from('appointments').insert([{
+                    vendor: currentUser.code,
+                    prospect_id: pid,
+                    prospect_name: pdata[0].name,
+                    date: document.getElementById('apt-date').value,
+                    time: document.getElementById('apt-time').value,
+                    type: document.getElementById('apt-type').value
+                }]);
+                if (error) throw error;
+                showMsg('✓ Cita agendada', 'success');
+                this.reset();
+                loadVendorData();
+            } catch (e) {
+                showMsg('Error: ' + e.message, 'error');
             }
-            const a = {
-                id: Date.now(),
-                vendor: currentUser.code,
-                pid: pid,
-                pname: p.name,
-                date: document.getElementById('apt-date').value,
-                time: document.getElementById('apt-time').value,
-                type: document.getElementById('apt-type').value
-            };
-            appointments.push(a);
-            saveData();
-            showMsg('✓ Cita agendada', 'success');
-            this.reset();
-            loadVendorData();
         });
 
-        document.getElementById('form-info').addEventListener('submit', function(e) {
+        document.getElementById('form-info').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const pid = document.getElementById('info-prospect').value;
-            const p = prospects.find(x => x.id == pid);
-            if (!p) {
-                alert('Selecciona prospecto');
-                return;
+            try {
+                const pid = document.getElementById('info-prospect').value;
+                const { data: pdata } = await supabase.from('prospects').select('name').eq('id', pid);
+                if (!pdata || pdata.length === 0) {
+                    alert('Selecciona prospecto');
+                    return;
+                }
+                const { error } = await supabase.from('infos').insert([{
+                    vendor: currentUser.code,
+                    prospect_id: pid,
+                    prospect_name: pdata[0].name,
+                    result: document.getElementById('info-result').value
+                }]);
+                if (error) throw error;
+                showMsg('✓ Info registrada', 'success');
+                this.reset();
+                loadVendorData();
+            } catch (e) {
+                showMsg('Error: ' + e.message, 'error');
             }
-            const i = {
-                id: Date.now(),
-                vendor: currentUser.code,
-                pid: pid,
-                pname: p.name,
-                result: document.getElementById('info-result').value,
-                date: new Date().toISOString().split('T')[0]
-            };
-            infos.push(i);
-            saveData();
-            showMsg('✓ Info registrada', 'success');
-            this.reset();
-            loadVendorData();
         });
 
         document.getElementById('closure-type').addEventListener('change', function() {
@@ -482,88 +492,110 @@
             document.getElementById('amount-field').style.display = this.value === 'Apartado' ? 'block' : 'none';
         });
 
-        document.getElementById('form-closure').addEventListener('submit', function(e) {
+        document.getElementById('form-closure').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const pid = document.getElementById('closure-prospect').value;
-            const p = prospects.find(x => x.id == pid);
-            if (!p) {
-                alert('Selecciona prospecto');
-                return;
+            try {
+                const pid = document.getElementById('closure-prospect').value;
+                const { data: pdata } = await supabase.from('prospects').select('name').eq('id', pid);
+                if (!pdata || pdata.length === 0) {
+                    alert('Selecciona prospecto');
+                    return;
+                }
+                const { error } = await supabase.from('closures').insert([{
+                    vendor: currentUser.code,
+                    prospect_id: pid,
+                    prospect_name: pdata[0].name,
+                    type: document.getElementById('closure-type').value,
+                    plan: document.getElementById('closure-type').value === 'Inscripción' ? document.getElementById('closure-plan').value : null,
+                    amount: document.getElementById('closure-type').value === 'Apartado' ? parseFloat(document.getElementById('closure-amount').value) || 0 : 0
+                }]);
+                if (error) throw error;
+                showMsg('✓ Cierre registrado', 'success');
+                this.reset();
+                loadVendorData();
+            } catch (e) {
+                showMsg('Error: ' + e.message, 'error');
             }
-            const c = {
-                id: Date.now(),
-                vendor: currentUser.code,
-                pid: pid,
-                pname: p.name,
-                type: document.getElementById('closure-type').value,
-                plan: document.getElementById('closure-type').value === 'Inscripción' ? document.getElementById('closure-plan').value : '',
-                amount: document.getElementById('closure-type').value === 'Apartado' ? parseFloat(document.getElementById('closure-amount').value) || 0 : 0
-            };
-            closures.push(c);
-            saveData();
-            showMsg('✓ Cierre registrado', 'success');
-            this.reset();
-            loadVendorData();
         });
 
-        document.getElementById('form-vendor').addEventListener('submit', function(e) {
+        document.getElementById('form-vendor').addEventListener('submit', async function(e) {
             e.preventDefault();
-            const name = document.getElementById('vendor-name').value.trim();
-            const code = document.getElementById('vendor-code').value.trim();
-            if (vendors.find(v => v.code === code)) {
-                alert('Código ya existe');
-                return;
+            try {
+                const name = document.getElementById('vendor-name').value.trim();
+                const code = document.getElementById('vendor-code').value.trim();
+                
+                const { data: existing } = await supabase.from('vendors').select('*').eq('code', code);
+                if (existing && existing.length > 0) {
+                    alert('Código ya existe');
+                    return;
+                }
+                
+                const { error } = await supabase.from('vendors').insert([{ name, code }]);
+                if (error) throw error;
+                showMsg('✓ Vendedor creado', 'success');
+                this.reset();
+                loadAdminData();
+            } catch (e) {
+                showMsg('Error: ' + e.message, 'error');
             }
-            vendors.push({ name, code });
-            saveData();
-            showMsg('✓ Vendedor creado', 'success');
-            this.reset();
-            loadAdminData();
         });
 
         // Load data
-        function loadVendorData() {
-            const vp = prospects.filter(x => x.vendor === currentUser.code);
-            const vc = calls.filter(x => x.vendor === currentUser.code);
-            const va = appointments.filter(x => x.vendor === currentUser.code);
-            const vi = infos.filter(x => x.vendor === currentUser.code);
-            const vl = closures.filter(x => x.vendor === currentUser.code);
+        async function loadVendorData() {
+            try {
+                const { data: vp } = await supabase.from('prospects').select('*').eq('vendor', currentUser.code);
+                const { data: vc } = await supabase.from('calls').select('*').eq('vendor', currentUser.code);
+                const { data: va } = await supabase.from('appointments').select('*').eq('vendor', currentUser.code);
+                const { data: vi } = await supabase.from('infos').select('*').eq('vendor', currentUser.code);
+                const { data: vl } = await supabase.from('closures').select('*').eq('vendor', currentUser.code);
 
-            document.getElementById('prospects-list').innerHTML = vp.length ? vp.map(x => `<div class="item"><h4>${x.name}</h4><p>Tel: ${x.phone}</p></div>`).join('') : '<p style="color:#999;font-size:12px">Sin prospectos</p>';
-            
-            updateSelects();
-            
-            document.getElementById('calls-list').innerHTML = vc.length ? vc.map(x => `<div class="item"><h4>${x.pname}</h4><p>Resultado: ${x.result}</p></div>`).join('') : '<p style="color:#999;font-size:12px">Sin llamadas</p>';
-            
-            document.getElementById('appointments-list').innerHTML = va.length ? va.map(x => `<div class="item"><h4>${x.pname}</h4><p>${x.date} ${x.time}</p><p>Tipo: ${x.type}</p></div>`).join('') : '<p style="color:#999;font-size:12px">Sin citas</p>';
-            
-            document.getElementById('infos-list').innerHTML = vi.length ? vi.map(x => `<div class="item"><h4>${x.pname}</h4><p>Resultado: ${x.result}</p></div>`).join('') : '<p style="color:#999;font-size:12px">Sin infos</p>';
-            
-            document.getElementById('closures-list').innerHTML = vl.length ? vl.map(x => `<div class="item"><h4>${x.pname}</h4><p>${x.type}${x.type === 'Inscripción' ? ` - Plan ${x.plan}` : ` - $${x.amount}`}</p></div>`).join('') : '<p style="color:#999;font-size:12px">Sin cierres</p>';
+                const prospects = vp || [];
+                const calls = vc || [];
+                const appointments = va || [];
+                const infos = vi || [];
+                const closures = vl || [];
+
+                document.getElementById('prospects-list').innerHTML = prospects.length ? prospects.map(x => `<div class="item"><h4>${x.name}</h4><p>Tel: ${x.phone}</p></div>`).join('') : '<p style="color:#999;font-size:12px">Sin prospectos</p>';
+                
+                updateSelects(prospects, appointments);
+                
+                document.getElementById('calls-list').innerHTML = calls.length ? calls.map(x => `<div class="item"><h4>${x.prospect_name}</h4><p>Resultado: ${x.result}</p></div>`).join('') : '<p style="color:#999;font-size:12px">Sin llamadas</p>';
+                
+                document.getElementById('appointments-list').innerHTML = appointments.length ? appointments.map(x => `<div class="item"><h4>${x.prospect_name}</h4><p>${x.date} ${x.time}</p><p>Tipo: ${x.type}</p></div>`).join('') : '<p style="color:#999;font-size:12px">Sin citas</p>';
+                
+                document.getElementById('infos-list').innerHTML = infos.length ? infos.map(x => `<div class="item"><h4>${x.prospect_name}</h4><p>Resultado: ${x.result}</p></div>`).join('') : '<p style="color:#999;font-size:12px">Sin infos</p>';
+                
+                document.getElementById('closures-list').innerHTML = closures.length ? closures.map(x => `<div class="item"><h4>${x.prospect_name}</h4><p>${x.type}${x.type === 'Inscripción' ? ` - Plan ${x.plan}` : ` - $${x.amount}`}</p></div>`).join('') : '<p style="color:#999;font-size:12px">Sin cierres</p>';
+            } catch (e) {
+                showMsg('Error cargando datos: ' + e.message, 'error');
+            }
         }
 
-        function updateSelects() {
-            const vp = prospects.filter(x => x.vendor === currentUser.code);
-            const va = appointments.filter(x => x.vendor === currentUser.code);
+        function updateSelects(prospects, appointments) {
+            const popts = prospects.map(x => `<option value="${x.id}">${x.name}</option>`).join('');
+            document.getElementById('call-prospect').innerHTML = '<option value="">Selecciona...</option>' + popts;
+            document.getElementById('apt-prospect').innerHTML = '<option value="">Selecciona...</option>' + popts;
+            document.getElementById('closure-prospect').innerHTML = '<option value="">Selecciona...</option>' + popts;
             
-            const opts = vp.map(x => `<option value="${x.id}">${x.name}</option>`).join('');
-            document.getElementById('call-prospect').innerHTML = '<option value="">Selecciona...</option>' + opts;
-            document.getElementById('apt-prospect').innerHTML = '<option value="">Selecciona...</option>' + opts;
-            document.getElementById('closure-prospect').innerHTML = '<option value="">Selecciona...</option>' + opts;
-            
-            const aopts = va.map(x => `<option value="${x.pid}">${x.pname}</option>`).join('');
+            const aopts = appointments.map(x => `<option value="${x.prospect_id}">${x.prospect_name}</option>`).join('');
             document.getElementById('info-prospect').innerHTML = '<option value="">Selecciona...</option>' + aopts;
         }
 
-        function loadAdminData() {
-            let html = '';
-            vendors.forEach(v => {
-                const vp = prospects.filter(x => x.vendor === v.code).length;
-                const vc = closures.filter(x => x.vendor === v.code).length;
-                const pct = vp > 0 ? Math.round((vc / vp) * 100) : 0;
-                html += `<tr><td>${v.name}</td><td>${vp}</td><td>${vc}</td><td style="color:#007AFF;font-weight:600">${pct}%</td></tr>`;
-            });
-            document.getElementById('admin-table').innerHTML = html || '<tr><td colspan="4" style="text-align:center;color:#999">Sin vendedores</td></tr>';
+        async function loadAdminData() {
+            try {
+                const { data: vendors } = await supabase.from('vendors').select('*');
+                let html = '';
+                
+                for (const v of (vendors || [])) {
+                    const { data: vp } = await supabase.from('prospects').select('id').eq('vendor', v.code);
+                    const { data: vc } = await supabase.from('closures').select('id').eq('vendor', v.code);
+                    const pct = (vp?.length || 0) > 0 ? Math.round(((vc?.length || 0) / vp.length) * 100) : 0;
+                    html += `<tr><td>${v.name}</td><td>${vp?.length || 0}</td><td>${vc?.length || 0}</td><td style="color:#007AFF;font-weight:600">${pct}%</td></tr>`;
+                }
+                document.getElementById('admin-table').innerHTML = html || '<tr><td colspan="4" style="text-align:center;color:#999">Sin vendedores</td></tr>';
+            } catch (e) {
+                showMsg('Error: ' + e.message, 'error');
+            }
         }
 
         // Logout
@@ -582,6 +614,8 @@
             msg.className = 'msg show ' + t;
             setTimeout(() => msg.classList.remove('show'), 3000);
         }
+
+        initDB();
     </script>
 </body>
 </html>
