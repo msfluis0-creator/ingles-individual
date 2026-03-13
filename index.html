@@ -4,327 +4,65 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Ingles individual</title>
+    <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-database.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-        
-        html, body {
-            width: 100%;
-            height: 100%;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f5f5f5;
-            overflow: hidden;
-        }
-        
-        .screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: none;
-            flex-direction: column;
-            z-index: 100;
-        }
-        
-        .screen.active {
-            display: flex;
-        }
-        
-        .login {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-        
-        .login-card {
-            background: white;
-            border-radius: 20px;
-            padding: 40px 30px;
-            width: 100%;
-            max-width: 320px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
-        
-        .login-card h1 {
-            font-size: 28px;
-            font-weight: 700;
-            text-align: center;
-            margin-bottom: 8px;
-        }
-        
-        .login-card p {
-            color: #999;
-            text-align: center;
-            font-size: 14px;
-            margin-bottom: 30px;
-        }
-        
-        .tabs {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 25px;
-            border-bottom: 2px solid #e5e5ea;
-        }
-        
-        .tabs button {
-            flex: 1;
-            padding: 12px;
-            background: none;
-            border: none;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            color: #999;
-            border-bottom: 3px solid transparent;
-            margin-bottom: -2px;
-        }
-        
-        .tabs button.active {
-            color: #007AFF;
-            border-bottom-color: #007AFF;
-        }
-        
-        .mode {
-            display: none;
-        }
-        
-        .mode.active {
-            display: block;
-        }
-        
-        .form-group {
-            margin-bottom: 16px;
-        }
-        
-        .form-group label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 8px;
-            font-size: 13px;
-        }
-        
-        .form-group input, .form-group select {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #e5e5ea;
-            border-radius: 12px;
-            font-size: 16px;
-            font-family: inherit;
-        }
-        
-        .form-group input:focus, .form-group select:focus {
-            outline: none;
-            border-color: #007AFF;
-            box-shadow: 0 0 0 3px rgba(0,122,255,0.1);
-        }
-        
-        .btn {
-            width: 100%;
-            padding: 14px;
-            background: #007AFF;
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            font-size: 15px;
-            font-family: inherit;
-        }
-        
-        .btn:active {
-            opacity: 0.8;
-        }
-        
-        .app {
-            background: white;
-        }
-        
-        .header {
-            background: white;
-            padding: 12px 16px;
-            border-bottom: 1px solid #e5e5ea;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-shrink: 0;
-        }
-        
-        .header h2 {
-            font-size: 18px;
-            font-weight: 700;
-        }
-        
-        .header-right {
-            text-align: right;
-        }
-        
-        .user-name {
-            font-size: 13px;
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-        
-        .logout-btn {
-            padding: 6px 12px;
-            background: #ff3b30;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 600;
-            font-family: inherit;
-        }
-        
-        .nav {
-            display: flex;
-            gap: 0;
-            border-bottom: 1px solid #e5e5ea;
-            overflow-x: auto;
-            background: white;
-            flex-shrink: 0;
-            -webkit-overflow-scrolling: touch;
-        }
-        
-        .nav button {
-            flex-shrink: 0;
-            padding: 12px 14px;
-            background: none;
-            border: none;
-            font-weight: 500;
-            font-size: 12px;
-            cursor: pointer;
-            color: #999;
-            border-bottom: 3px solid transparent;
-            white-space: nowrap;
-            font-family: inherit;
-        }
-        
-        .nav button.active {
-            color: #007AFF;
-            border-bottom-color: #007AFF;
-        }
-        
-        .content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 12px;
-            -webkit-overflow-scrolling: touch;
-        }
-        
-        .section {
-            background: white;
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 12px;
-            border: 1px solid #e5e5ea;
-        }
-        
-        .section h3 {
-            font-size: 15px;
-            font-weight: 700;
-            margin-bottom: 16px;
-        }
-        
-        .item {
-            background: #f5f5f5;
-            border-radius: 12px;
-            padding: 12px;
-            margin-bottom: 12px;
-            border-left: 4px solid #007AFF;
-        }
-        
-        .item h4 {
-            font-size: 13px;
-            font-weight: 600;
-            margin-bottom: 4px;
-        }
-        
-        .item p {
-            font-size: 12px;
-            color: #999;
-            margin: 2px 0;
-        }
-        
-        .msg {
-            padding: 12px;
-            border-radius: 12px;
-            margin-bottom: 12px;
-            display: none;
-            font-size: 13px;
-            font-weight: 600;
-        }
-        
-        .msg.show {
-            display: block;
-        }
-        
-        .msg.success {
-            background: #d1fae5;
-            color: #065f46;
-        }
-        
-        .msg.error {
-            background: #fee2e2;
-            color: #991b1b;
-        }
-        
-        .pane {
-            display: none;
-        }
-        
-        .pane.active {
-            display: block;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 12px;
-        }
-        
-        table th {
-            background: #f5f5f5;
-            padding: 10px;
-            text-align: left;
-            font-weight: 600;
-            border-bottom: 1px solid #e5e5ea;
-        }
-        
-        table td {
-            padding: 10px;
-            border-bottom: 1px solid #e5e5ea;
-        }
-        
-        .empty {
-            color: #999;
-            font-size: 12px;
-            text-align: center;
-            padding: 20px;
-        }
+        * {margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+        html,body {width:100%;height:100%}
+        body {font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f5;overflow:hidden}
+        .screen {position:fixed;top:0;left:0;width:100%;height:100%;display:none;flex-direction:column;z-index:100}
+        .screen.active {display:flex}
+        .login {background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);justify-content:center;align-items:center;padding:20px}
+        .card {background:white;border-radius:20px;padding:40px 30px;width:100%;max-width:320px;box-shadow:0 20px 60px rgba(0,0,0,0.3)}
+        .card h1 {font-size:28px;font-weight:700;text-align:center;margin-bottom:8px}
+        .card p {color:#999;text-align:center;font-size:14px;margin-bottom:30px}
+        .tabs {display:flex;gap:8px;margin-bottom:25px;border-bottom:2px solid #e5e5ea}
+        .tabs button {flex:1;padding:12px;background:0;border:0;font-weight:600;font-size:14px;cursor:pointer;color:#999;border-bottom:3px solid transparent;margin-bottom:-2px}
+        .tabs button.active {color:#007AFF;border-bottom-color:#007AFF}
+        .mode {display:none}
+        .mode.active {display:block}
+        .form-group {margin-bottom:16px}
+        .form-group label {display:block;font-weight:600;margin-bottom:8px;font-size:13px}
+        .form-group input,.form-group select {width:100%;padding:12px;border:1px solid #e5e5ea;border-radius:12px;font-size:16px;font-family:inherit}
+        .form-group input:focus,.form-group select:focus {outline:0;border-color:#007AFF;box-shadow:0 0 0 3px rgba(0,122,255,0.1)}
+        .btn {width:100%;padding:14px;background:#007AFF;color:white;border:0;border-radius:12px;font-weight:600;cursor:pointer;font-size:15px;font-family:inherit}
+        .btn:active {opacity:0.8}
+        .app {background:white}
+        .header {background:white;padding:12px 16px;border-bottom:1px solid #e5e5ea;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+        .header h2 {font-size:18px;font-weight:700}
+        .header-right {text-align:right}
+        .user-name {font-size:13px;font-weight:600;margin-bottom:4px}
+        .logout-btn {padding:6px 12px;background:#ff3b30;color:white;border:0;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit}
+        .nav {display:flex;gap:0;border-bottom:1px solid #e5e5ea;overflow-x:auto;background:white;flex-shrink:0;-webkit-overflow-scrolling:touch}
+        .nav button {flex-shrink:0;padding:12px 14px;background:0;border:0;font-weight:500;font-size:12px;cursor:pointer;color:#999;border-bottom:3px solid transparent;white-space:nowrap;font-family:inherit}
+        .nav button.active {color:#007AFF;border-bottom-color:#007AFF}
+        .content {flex:1;overflow-y:auto;padding:12px;-webkit-overflow-scrolling:touch}
+        .section {background:white;border-radius:12px;padding:16px;margin-bottom:12px;border:1px solid #e5e5ea}
+        .section h3 {font-size:15px;font-weight:700;margin-bottom:16px}
+        .item {background:#f5f5f5;border-radius:12px;padding:12px;margin-bottom:12px;border-left:4px solid #007AFF}
+        .item h4 {font-size:13px;font-weight:600;margin-bottom:4px}
+        .item p {font-size:12px;color:#999;margin:2px 0}
+        .msg {padding:12px;border-radius:12px;margin-bottom:12px;display:none;font-size:13px;font-weight:600}
+        .msg.show {display:block}
+        .msg.success {background:#d1fae5;color:#065f46}
+        .msg.error {background:#fee2e2;color:#991b1b}
+        .pane {display:none}
+        .pane.active {display:block}
+        table {width:100%;border-collapse:collapse;font-size:12px}
+        table th {background:#f5f5f5;padding:10px;text-align:left;font-weight:600;border-bottom:1px solid #e5e5ea}
+        table td {padding:10px;border-bottom:1px solid #e5e5ea}
+        .empty {color:#999;font-size:12px;text-align:center;padding:20px}
     </style>
 </head>
 <body>
-    <!-- LOGIN -->
     <div class="screen login active" id="login">
-        <div class="login-card">
+        <div class="card">
             <h1>📊 Ingles</h1>
             <p>Dashboard Ventas</p>
-            
             <div class="tabs">
                 <button class="active" onclick="switchMode('vendor')">Vendedor</button>
                 <button onclick="switchMode('admin')">Admin</button>
             </div>
-            
             <div class="mode active" id="vendor-mode">
                 <div class="form-group">
                     <label>Nombre</label>
@@ -336,7 +74,6 @@
                 </div>
                 <button class="btn" onclick="loginVendor()">Entrar</button>
             </div>
-            
             <div class="mode" id="admin-mode">
                 <div class="form-group">
                     <label>Contraseña</label>
@@ -347,7 +84,6 @@
         </div>
     </div>
     
-    <!-- APP -->
     <div class="screen app" id="app">
         <div class="header">
             <h2>📊</h2>
@@ -356,7 +92,6 @@
                 <button class="logout-btn" onclick="logout()">Salir</button>
             </div>
         </div>
-        
         <div class="nav" id="nav">
             <button class="active" onclick="tab('reg')">+ Reg</button>
             <button onclick="tab('pros')">👥 Pros</button>
@@ -365,7 +100,6 @@
             <button onclick="tab('info')">📋 Infos</button>
             <button onclick="tab('close')">✓ Cier</button>
         </div>
-        
         <div class="content">
             <div id="reg" class="pane active">
                 <div class="section">
@@ -384,23 +118,19 @@
                     </form>
                 </div>
             </div>
-            
             <div id="pros" class="pane">
                 <div class="section">
                     <h3>Mis Prospectos</h3>
                     <div id="pros-list"></div>
                 </div>
             </div>
-            
             <div id="calls" class="pane">
                 <div class="section">
                     <h3>Registrar Llamada</h3>
                     <form onsubmit="addCall(event)">
                         <div class="form-group">
                             <label>Prospecto</label>
-                            <select id="cp" required>
-                                <option value="">Selecciona...</option>
-                            </select>
+                            <select id="cp" required><option value="">Selecciona...</option></select>
                         </div>
                         <div class="form-group">
                             <label>Resultado</label>
@@ -420,16 +150,13 @@
                     <div id="calls-list"></div>
                 </div>
             </div>
-            
             <div id="apt" class="pane">
                 <div class="section">
                     <h3>Agendar Cita</h3>
                     <form onsubmit="addApt(event)">
                         <div class="form-group">
                             <label>Prospecto</label>
-                            <select id="ap" required>
-                                <option value="">Selecciona...</option>
-                            </select>
+                            <select id="ap" required><option value="">Selecciona...</option></select>
                         </div>
                         <div class="form-group">
                             <label>Fecha</label>
@@ -455,16 +182,13 @@
                     <div id="apt-list"></div>
                 </div>
             </div>
-            
             <div id="info" class="pane">
                 <div class="section">
                     <h3>Registrar Info</h3>
                     <form onsubmit="addInfo(event)">
                         <div class="form-group">
                             <label>Prospecto</label>
-                            <select id="ip" required>
-                                <option value="">Selecciona...</option>
-                            </select>
+                            <select id="ip" required><option value="">Selecciona...</option></select>
                         </div>
                         <div class="form-group">
                             <label>Resultado</label>
@@ -483,16 +207,13 @@
                     <div id="info-list"></div>
                 </div>
             </div>
-            
             <div id="close" class="pane">
                 <div class="section">
                     <h3>Registrar Cierre</h3>
                     <form onsubmit="addClose(event)">
                         <div class="form-group">
                             <label>Prospecto</label>
-                            <select id="clp" required>
-                                <option value="">Selecciona...</option>
-                            </select>
+                            <select id="clp" required><option value="">Selecciona...</option></select>
                         </div>
                         <div class="form-group">
                             <label>Tipo</label>
@@ -504,15 +225,7 @@
                         </div>
                         <div class="form-group" id="pf" style="display:none">
                             <label>Plan</label>
-                            <select id="clplan">
-                                <option>A</option>
-                                <option>AMSI</option>
-                                <option>B</option>
-                                <option>C</option>
-                                <option>D</option>
-                                <option>E</option>
-                                <option>F</option>
-                            </select>
+                            <select id="clplan"><option>A</option><option>AMSI</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option></select>
                         </div>
                         <div class="form-group" id="af" style="display:none">
                             <label>Monto</label>
@@ -526,7 +239,6 @@
                     <div id="close-list"></div>
                 </div>
             </div>
-            
             <div id="admin" class="pane">
                 <div class="section">
                     <h3>Crear Vendedor</h3>
@@ -545,14 +257,7 @@
                 <div class="section">
                     <h3>Métricas</h3>
                     <table>
-                        <thead>
-                            <tr>
-                                <th>Vendedor</th>
-                                <th>Pros</th>
-                                <th>Cier</th>
-                                <th>%</th>
-                            </tr>
-                        </thead>
+                        <thead><tr><th>Vendedor</th><th>Pros</th><th>Cier</th><th>%</th></tr></thead>
                         <tbody id="admin-table"></tbody>
                     </table>
                 </div>
@@ -561,23 +266,33 @@
     </div>
     
     <script>
-        let user = null;
-        let db = {
-            vendors: [],
-            prospects: [],
-            calls: [],
-            appointments: [],
-            infos: [],
-            closures: []
+        const firebaseConfig = {
+            apiKey: "AIzaSyAYBLWeoESWmuDVOyMLlCiFTXurx2JWVsU",
+            authDomain: "ingles-individual-1af6a.firebaseapp.com",
+            projectId: "ingles-individual-1af6a",
+            storageBucket: "ingles-individual-1af6a.firebasestorage.app",
+            messagingSenderId: "1041620328295",
+            appId: "1:1041620328295:web:33bd4de1d7e89f2d7319c2",
+            databaseURL: "https://ingles-individual-1af6a-default-rtdb.firebaseio.com"
         };
         
-        function loadDB() {
-            const saved = localStorage.getItem('db');
-            if (saved) db = JSON.parse(saved);
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        let user = null;
+        let data = {vendors:[],prospects:[],calls:[],appointments:[],infos:[],closures:[]};
+        
+        function loadData() {
+            db.ref().on('value', (snapshot) => {
+                if (snapshot.val()) {
+                    data = snapshot.val();
+                    if (user && user.type === 'vendor') updateUI();
+                    else if (user && user.type === 'admin') loadAdmin();
+                }
+            });
         }
         
-        function saveDB() {
-            localStorage.setItem('db', JSON.stringify(db));
+        function saveData() {
+            db.ref().set(data).catch(e => console.error(e));
         }
         
         function switchMode(m) {
@@ -594,11 +309,11 @@
                 showMsg('Completa los campos', 'error');
                 return;
             }
-            if (!db.vendors.find(v => v.code === code)) {
+            if (!data.vendors || !data.vendors.find(v => v.code === code)) {
                 showMsg('Código incorrecto', 'error');
                 return;
             }
-            user = { name, code, type: 'vendor' };
+            user = {name, code, type: 'vendor'};
             showApp();
         }
         
@@ -607,7 +322,7 @@
                 showMsg('Contraseña incorrecta', 'error');
                 return;
             }
-            user = { name: 'Admin', type: 'admin' };
+            user = {name: 'Admin', type: 'admin'};
             showApp();
         }
         
@@ -622,6 +337,7 @@
                 loadAdmin();
             } else {
                 loadData();
+                updateUI();
             }
         }
         
@@ -630,53 +346,56 @@
             document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
             document.getElementById(name).classList.add('active');
             event.target.classList.add('active');
-            if (name !== 'reg') loadData();
+            if (name !== 'reg') updateUI();
         }
         
         function addProspect(e) {
             e.preventDefault();
-            db.prospects.push({
+            if (!data.prospects) data.prospects = [];
+            data.prospects.push({
                 id: Date.now(),
                 vendor: user.code,
                 name: document.getElementById('pn').value,
                 phone: document.getElementById('pp').value
             });
-            saveDB();
+            saveData();
             showMsg('✓ Prospecto registrado', 'success');
             e.target.reset();
-            loadData();
+            updateUI();
         }
         
         function addCall(e) {
             e.preventDefault();
             const pid = document.getElementById('cp').value;
-            const p = db.prospects.find(x => x.id == pid);
+            const p = (data.prospects || []).find(x => x.id == pid);
             if (!p) {
                 showMsg('Selecciona prospecto', 'error');
                 return;
             }
-            db.calls.push({
+            if (!data.calls) data.calls = [];
+            data.calls.push({
                 id: Date.now(),
                 vendor: user.code,
                 pid: pid,
                 pname: p.name,
                 result: document.getElementById('cr').value
             });
-            saveDB();
+            saveData();
             showMsg('✓ Llamada registrada', 'success');
             e.target.reset();
-            loadData();
+            updateUI();
         }
         
         function addApt(e) {
             e.preventDefault();
             const pid = document.getElementById('ap').value;
-            const p = db.prospects.find(x => x.id == pid);
+            const p = (data.prospects || []).find(x => x.id == pid);
             if (!p) {
                 showMsg('Selecciona prospecto', 'error');
                 return;
             }
-            db.appointments.push({
+            if (!data.appointments) data.appointments = [];
+            data.appointments.push({
                 id: Date.now(),
                 vendor: user.code,
                 pid: pid,
@@ -685,31 +404,32 @@
                 time: document.getElementById('at').value,
                 type: document.getElementById('atype').value
             });
-            saveDB();
+            saveData();
             showMsg('✓ Cita agendada', 'success');
             e.target.reset();
-            loadData();
+            updateUI();
         }
         
         function addInfo(e) {
             e.preventDefault();
             const pid = document.getElementById('ip').value;
-            const p = db.prospects.find(x => x.id == pid);
+            const p = (data.prospects || []).find(x => x.id == pid);
             if (!p) {
                 showMsg('Selecciona prospecto', 'error');
                 return;
             }
-            db.infos.push({
+            if (!data.infos) data.infos = [];
+            data.infos.push({
                 id: Date.now(),
                 vendor: user.code,
                 pid: pid,
                 pname: p.name,
                 result: document.getElementById('ir').value
             });
-            saveDB();
+            saveData();
             showMsg('✓ Info registrada', 'success');
             e.target.reset();
-            loadData();
+            updateUI();
         }
         
         function showFields() {
@@ -721,13 +441,14 @@
         function addClose(e) {
             e.preventDefault();
             const pid = document.getElementById('clp').value;
-            const p = db.prospects.find(x => x.id == pid);
+            const p = (data.prospects || []).find(x => x.id == pid);
             if (!p) {
                 showMsg('Selecciona prospecto', 'error');
                 return;
             }
             const type = document.getElementById('clt').value;
-            db.closures.push({
+            if (!data.closures) data.closures = [];
+            data.closures.push({
                 id: Date.now(),
                 vendor: user.code,
                 pid: pid,
@@ -736,35 +457,36 @@
                 plan: type === 'Inscripción' ? document.getElementById('clplan').value : null,
                 amount: type === 'Apartado' ? parseFloat(document.getElementById('clamt').value) || 0 : 0
             });
-            saveDB();
+            saveData();
             showMsg('✓ Cierre registrado', 'success');
             e.target.reset();
-            loadData();
+            updateUI();
         }
         
         function addVendor(e) {
             e.preventDefault();
             const code = document.getElementById('vc').value.trim();
-            if (db.vendors.find(v => v.code === code)) {
+            if (!data.vendors) data.vendors = [];
+            if (data.vendors.find(v => v.code === code)) {
                 showMsg('Código ya existe', 'error');
                 return;
             }
-            db.vendors.push({
+            data.vendors.push({
                 name: document.getElementById('vn').value,
                 code: code
             });
-            saveDB();
+            saveData();
             showMsg('✓ Vendedor creado', 'success');
             e.target.reset();
             loadAdmin();
         }
         
-        function loadData() {
-            const p = db.prospects.filter(x => x.vendor === user.code);
-            const c = db.calls.filter(x => x.vendor === user.code);
-            const a = db.appointments.filter(x => x.vendor === user.code);
-            const i = db.infos.filter(x => x.vendor === user.code);
-            const cl = db.closures.filter(x => x.vendor === user.code);
+        function updateUI() {
+            const p = (data.prospects || []).filter(x => x.vendor === user.code);
+            const c = (data.calls || []).filter(x => x.vendor === user.code);
+            const a = (data.appointments || []).filter(x => x.vendor === user.code);
+            const i = (data.infos || []).filter(x => x.vendor === user.code);
+            const cl = (data.closures || []).filter(x => x.vendor === user.code);
             
             document.getElementById('pros-list').innerHTML = p.length ? p.map(x => `<div class="item"><h4>${x.name}</h4><p>Tel: ${x.phone}</p></div>`).join('') : '<div class="empty">Sin prospectos</div>';
             document.getElementById('calls-list').innerHTML = c.length ? c.map(x => `<div class="item"><h4>${x.pname}</h4><p>${x.result}</p></div>`).join('') : '<div class="empty">Sin llamadas</div>';
@@ -783,9 +505,9 @@
         
         function loadAdmin() {
             let html = '';
-            db.vendors.forEach(v => {
-                const vp = db.prospects.filter(x => x.vendor === v.code).length;
-                const vc = db.closures.filter(x => x.vendor === v.code).length;
+            (data.vendors || []).forEach(v => {
+                const vp = (data.prospects || []).filter(x => x.vendor === v.code).length;
+                const vc = (data.closures || []).filter(x => x.vendor === v.code).length;
                 const pct = vp > 0 ? Math.round((vc / vp) * 100) : 0;
                 html += `<tr><td>${v.name}</td><td>${vp}</td><td>${vc}</td><td>${pct}%</td></tr>`;
             });
@@ -808,7 +530,7 @@
             setTimeout(() => msg.classList.remove('show'), 3000);
         }
         
-        loadDB();
+        loadData();
     </script>
 </body>
 </html>
