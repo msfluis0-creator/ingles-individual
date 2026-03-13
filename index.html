@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Ingles individual</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.0"></script>
     <style>
         *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
         html,body{width:100%;height:100%}
@@ -26,6 +25,7 @@
         .form-group input:focus,.form-group select:focus{outline:0;border-color:#007AFF;box-shadow:0 0 0 3px rgba(0,122,255,0.1)}
         .btn{width:100%;padding:14px;background:#007AFF;color:white;border:0;border-radius:12px;font-weight:600;cursor:pointer;font-size:15px;font-family:inherit;margin-bottom:8px}
         .btn:active{opacity:0.8}
+        .btn-secondary{background:#34C759}
         .app{background:white}
         .header{background:white;padding:12px 16px;border-bottom:1px solid #e5e5ea;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
         .header h2{font-size:18px;font-weight:700}
@@ -51,7 +51,7 @@
         table th{background:#f5f5f5;padding:10px;text-align:left;font-weight:600;border-bottom:1px solid #e5e5ea}
         table td{padding:10px;border-bottom:1px solid #e5e5ea}
         .empty{color:#999;font-size:12px;text-align:center;padding:20px}
-        .loading{color:#999;font-size:12px;text-align:center;padding:20px}
+        .sync-code{background:#f0f0f0;padding:12px;border-radius:8px;font-family:monospace;font-size:11px;word-break:break-all;margin:8px 0}
     </style>
 </head>
 <body>
@@ -121,7 +121,7 @@
             <div id="pros" class="pane">
                 <div class="section">
                     <h3>Mis Prospectos</h3>
-                    <div id="pros-list" class="loading">Cargando...</div>
+                    <div id="pros-list"></div>
                 </div>
             </div>
             <div id="calls" class="pane">
@@ -147,7 +147,7 @@
                 </div>
                 <div class="section">
                     <h3>Historial</h3>
-                    <div id="calls-list" class="loading">Cargando...</div>
+                    <div id="calls-list"></div>
                 </div>
             </div>
             <div id="apt" class="pane">
@@ -179,7 +179,7 @@
                 </div>
                 <div class="section">
                     <h3>Mis Citas</h3>
-                    <div id="apt-list" class="loading">Cargando...</div>
+                    <div id="apt-list"></div>
                 </div>
             </div>
             <div id="info" class="pane">
@@ -204,7 +204,7 @@
                 </div>
                 <div class="section">
                     <h3>Registradas</h3>
-                    <div id="info-list" class="loading">Cargando...</div>
+                    <div id="info-list"></div>
                 </div>
             </div>
             <div id="close" class="pane">
@@ -236,7 +236,7 @@
                 </div>
                 <div class="section">
                     <h3>Registrados</h3>
-                    <div id="close-list" class="loading">Cargando...</div>
+                    <div id="close-list"></div>
                 </div>
             </div>
             <div id="admin" class="pane">
@@ -258,249 +258,222 @@
                     <h3>Métricas</h3>
                     <table>
                         <thead><tr><th>Vendedor</th><th>Pros</th><th>Cier</th><th>%</th></tr></thead>
-                        <tbody id="admin-table"><tr><td colspan="4" class="loading">Cargando...</td></tr></tbody>
+                        <tbody id="admin-table"></tbody>
                     </table>
+                </div>
+                <div class="section">
+                    <h3>Sincronizar Datos</h3>
+                    <button class="btn btn-secondary" onclick="exportData()">📤 Exportar Datos</button>
+                    <button class="btn btn-secondary" onclick="showImportForm()">📥 Importar Datos</button>
+                    <div id="export-box"></div>
+                    <div id="import-box" style="display:none;margin-top:12px">
+                        <textarea id="import-data" placeholder="Pega aquí los datos exportados..." style="width:100%;height:100px;padding:8px;border:1px solid #e5e5ea;border-radius:8px;font-family:monospace;font-size:11px"></textarea>
+                        <button class="btn" onclick="importData()" style="margin-top:8px">Importar</button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
     
     <script>
-        const SUPABASE_URL = 'https://yduipgjijwepkwlcvntc.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_JVByUBRj-6ixEbRNGHAbPQ_MqyjSLt9';
-        const { createClient } = window.supabase;
-        const db = createClient(SUPABASE_URL, SUPABASE_KEY);
-        
         let user = null;
+        let db = JSON.parse(localStorage.getItem('ingles_db') || '{"vendors":[{"name":"Juan","code":"001"},{"name":"María","code":"002"}],"prospects":[],"calls":[],"appointments":[],"infos":[],"closures":[]}');
+        
+        function save(){localStorage.setItem('ingles_db',JSON.stringify(db));}
         
         function switchMode(m){
-            document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.mode').forEach(d => d.classList.remove('active'));
+            document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('active'));
+            document.querySelectorAll('.mode').forEach(d=>d.classList.remove('active'));
             event.target.classList.add('active');
-            document.getElementById(m + '-mode').classList.add('active');
+            document.getElementById(m+'-mode').classList.add('active');
         }
         
-        async function loginVendor(){
-            const name = document.getElementById('vname').value.trim();
-            const code = document.getElementById('vcode').value.trim();
-            if(!name || !code){showMsg('Completa los campos', 'error');return;}
-            try{
-                const {data} = await db.from('vendors').select('*').eq('code', code);
-                if(!data || data.length === 0){showMsg('Código incorrecto', 'error');return;}
-                user = {name, code, type: 'vendor'};
-                showApp();
-            }catch(e){showMsg('Error: ' + e.message, 'error');}
+        function loginVendor(){
+            const name=document.getElementById('vname').value.trim();
+            const code=document.getElementById('vcode').value.trim();
+            if(!name||!code){showMsg('Completa los campos','error');return;}
+            if(!db.vendors.find(v=>v.code===code)){showMsg('Código incorrecto','error');return;}
+            user={name,code,type:'vendor'};
+            showApp();
         }
         
         function loginAdmin(){
-            if(document.getElementById('apass').value !== 'admin123'){showMsg('Contraseña incorrecta', 'error');return;}
-            user = {name: 'Admin', type: 'admin'};
+            if(document.getElementById('apass').value!=='admin123'){showMsg('Contraseña incorrecta','error');return;}
+            user={name:'Admin',type:'admin'};
             showApp();
         }
         
         function showApp(){
             document.getElementById('login').classList.remove('active');
             document.getElementById('app').classList.add('active');
-            document.getElementById('user').textContent = user.name;
-            if(user.type === 'admin'){
-                document.getElementById('nav').style.display = 'none';
+            document.getElementById('user').textContent=user.name;
+            if(user.type==='admin'){
+                document.getElementById('nav').style.display='none';
                 tab('admin');
-                loadAdmin();
             }else{
-                loadData();
+                updateUI();
             }
         }
         
         function tab(name){
-            document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
+            document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
             document.getElementById(name).classList.add('active');
             event.target.classList.add('active');
-            if(name !== 'reg') loadData();
+            if(name!=='reg')updateUI();
+            if(name==='admin')loadAdmin();
         }
         
-        async function addProspect(e){
+        function addProspect(e){
             e.preventDefault();
-            try{
-                await db.from('prospects').insert([{
-                    vendor: user.code,
-                    name: document.getElementById('pn').value,
-                    phone: document.getElementById('pp').value
-                }]);
-                showMsg('✓ Prospecto registrado', 'success');
-                e.target.reset();
-                loadData();
-            }catch(e){showMsg('Error: ' + e.message, 'error');}
+            db.prospects.push({id:Date.now(),vendor:user.code,name:document.getElementById('pn').value,phone:document.getElementById('pp').value});
+            save();
+            showMsg('✓ Prospecto registrado','success');
+            e.target.reset();
+            updateUI();
         }
         
-        async function addCall(e){
+        function addCall(e){
             e.preventDefault();
-            try{
-                const pid = document.getElementById('cp').value;
-                const {data:pdata} = await db.from('prospects').select('name').eq('id', pid);
-                if(!pdata || !pdata[0]){showMsg('Selecciona prospecto', 'error');return;}
-                await db.from('calls').insert([{
-                    vendor: user.code,
-                    prospect_id: pid,
-                    prospect_name: pdata[0].name,
-                    result: document.getElementById('cr').value
-                }]);
-                showMsg('✓ Llamada registrada', 'success');
-                e.target.reset();
-                loadData();
-            }catch(e){showMsg('Error: ' + e.message, 'error');}
+            const pid=document.getElementById('cp').value;
+            const p=db.prospects.find(x=>x.id==pid);
+            if(!p){showMsg('Selecciona prospecto','error');return;}
+            db.calls.push({id:Date.now(),vendor:user.code,pid,pname:p.name,result:document.getElementById('cr').value});
+            save();
+            showMsg('✓ Llamada registrada','success');
+            e.target.reset();
+            updateUI();
         }
         
-        async function addApt(e){
+        function addApt(e){
             e.preventDefault();
-            try{
-                const pid = document.getElementById('ap').value;
-                const {data:pdata} = await db.from('prospects').select('name').eq('id', pid);
-                if(!pdata || !pdata[0]){showMsg('Selecciona prospecto', 'error');return;}
-                await db.from('appointments').insert([{
-                    vendor: user.code,
-                    prospect_id: pid,
-                    prospect_name: pdata[0].name,
-                    date: document.getElementById('ad').value,
-                    time: document.getElementById('at').value,
-                    type: document.getElementById('atype').value
-                }]);
-                showMsg('✓ Cita agendada', 'success');
-                e.target.reset();
-                loadData();
-            }catch(e){showMsg('Error: ' + e.message, 'error');}
+            const pid=document.getElementById('ap').value;
+            const p=db.prospects.find(x=>x.id==pid);
+            if(!p){showMsg('Selecciona prospecto','error');return;}
+            db.appointments.push({id:Date.now(),vendor:user.code,pid,pname:p.name,date:document.getElementById('ad').value,time:document.getElementById('at').value,type:document.getElementById('atype').value});
+            save();
+            showMsg('✓ Cita agendada','success');
+            e.target.reset();
+            updateUI();
         }
         
-        async function addInfo(e){
+        function addInfo(e){
             e.preventDefault();
-            try{
-                const pid = document.getElementById('ip').value;
-                const {data:pdata} = await db.from('prospects').select('name').eq('id', pid);
-                if(!pdata || !pdata[0]){showMsg('Selecciona prospecto', 'error');return;}
-                await db.from('infos').insert([{
-                    vendor: user.code,
-                    prospect_id: pid,
-                    prospect_name: pdata[0].name,
-                    result: document.getElementById('ir').value
-                }]);
-                showMsg('✓ Info registrada', 'success');
-                e.target.reset();
-                loadData();
-            }catch(e){showMsg('Error: ' + e.message, 'error');}
+            const pid=document.getElementById('ip').value;
+            const p=db.prospects.find(x=>x.id==pid);
+            if(!p){showMsg('Selecciona prospecto','error');return;}
+            db.infos.push({id:Date.now(),vendor:user.code,pid,pname:p.name,result:document.getElementById('ir').value});
+            save();
+            showMsg('✓ Info registrada','success');
+            e.target.reset();
+            updateUI();
         }
         
         function showFields(){
-            const t = document.getElementById('clt').value;
-            document.getElementById('pf').style.display = t === 'Inscripción' ? 'block' : 'none';
-            document.getElementById('af').style.display = t === 'Apartado' ? 'block' : 'none';
+            const t=document.getElementById('clt').value;
+            document.getElementById('pf').style.display=t==='Inscripción'?'block':'none';
+            document.getElementById('af').style.display=t==='Apartado'?'block':'none';
         }
         
-        async function addClose(e){
+        function addClose(e){
             e.preventDefault();
-            try{
-                const pid = document.getElementById('clp').value;
-                const {data:pdata} = await db.from('prospects').select('name').eq('id', pid);
-                if(!pdata || !pdata[0]){showMsg('Selecciona prospecto', 'error');return;}
-                const type = document.getElementById('clt').value;
-                await db.from('closures').insert([{
-                    vendor: user.code,
-                    prospect_id: pid,
-                    prospect_name: pdata[0].name,
-                    type: type,
-                    plan: type === 'Inscripción' ? document.getElementById('clplan').value : null,
-                    amount: type === 'Apartado' ? parseFloat(document.getElementById('clamt').value) || 0 : 0
-                }]);
-                showMsg('✓ Cierre registrado', 'success');
-                e.target.reset();
-                loadData();
-            }catch(e){showMsg('Error: ' + e.message, 'error');}
+            const pid=document.getElementById('clp').value;
+            const p=db.prospects.find(x=>x.id==pid);
+            if(!p){showMsg('Selecciona prospecto','error');return;}
+            const type=document.getElementById('clt').value;
+            db.closures.push({id:Date.now(),vendor:user.code,pid,pname:p.name,type,plan:type==='Inscripción'?document.getElementById('clplan').value:null,amount:type==='Apartado'?parseFloat(document.getElementById('clamt').value)||0:0});
+            save();
+            showMsg('✓ Cierre registrado','success');
+            e.target.reset();
+            updateUI();
         }
         
-        async function addVendor(e){
+        function addVendor(e){
             e.preventDefault();
-            try{
-                const code = document.getElementById('vc').value.trim();
-                const {data:existing} = await db.from('vendors').select('*').eq('code', code);
-                if(existing && existing.length > 0){showMsg('Código ya existe', 'error');return;}
-                await db.from('vendors').insert([{
-                    name: document.getElementById('vn').value,
-                    code: code
-                }]);
-                showMsg('✓ Vendedor creado', 'success');
-                e.target.reset();
-                loadAdmin();
-            }catch(e){showMsg('Error: ' + e.message, 'error');}
+            const code=document.getElementById('vc').value.trim();
+            if(db.vendors.find(v=>v.code===code)){showMsg('Código ya existe','error');return;}
+            db.vendors.push({name:document.getElementById('vn').value,code});
+            save();
+            showMsg('✓ Vendedor creado','success');
+            e.target.reset();
+            loadAdmin();
         }
         
-        async function loadData(){
-            try{
-                const {data:vp} = await db.from('prospects').select('*').eq('vendor', user.code);
-                const {data:vc} = await db.from('calls').select('*').eq('vendor', user.code);
-                const {data:va} = await db.from('appointments').select('*').eq('vendor', user.code);
-                const {data:vi} = await db.from('infos').select('*').eq('vendor', user.code);
-                const {data:vl} = await db.from('closures').select('*').eq('vendor', user.code);
-                
-                const prospects = vp || [];
-                const calls = vc || [];
-                const appointments = va || [];
-                const infos = vi || [];
-                const closures = vl || [];
-                
-                document.getElementById('pros-list').innerHTML = prospects.length ? prospects.map(x => `<div class="item"><h4>${x.name}</h4><p>Tel: ${x.phone}</p></div>`).join('') : '<div class="empty">Sin prospectos</div>';
-                document.getElementById('calls-list').innerHTML = calls.length ? calls.map(x => `<div class="item"><h4>${x.prospect_name}</h4><p>${x.result}</p></div>`).join('') : '<div class="empty">Sin llamadas</div>';
-                document.getElementById('apt-list').innerHTML = appointments.length ? appointments.map(x => `<div class="item"><h4>${x.prospect_name}</h4><p>${x.date} ${x.time} (${x.type})</p></div>`).join('') : '<div class="empty">Sin citas</div>';
-                document.getElementById('info-list').innerHTML = infos.length ? infos.map(x => `<div class="item"><h4>${x.prospect_name}</h4><p>${x.result}</p></div>`).join('') : '<div class="empty">Sin infos</div>';
-                document.getElementById('close-list').innerHTML = closures.length ? closures.map(x => `<div class="item"><h4>${x.prospect_name}</h4><p>${x.type}${x.type === 'Inscripción' ? ` - Plan ${x.plan}` : ` - $${x.amount}`}</p></div>`).join('') : '<div class="empty">Sin cierres</div>';
-                
-                const popts = prospects.map(x => `<option value="${x.id}">${x.name}</option>`).join('');
-                document.getElementById('cp').innerHTML = '<option value="">Selecciona...</option>' + popts;
-                document.getElementById('ap').innerHTML = '<option value="">Selecciona...</option>' + popts;
-                document.getElementById('clp').innerHTML = '<option value="">Selecciona...</option>' + popts;
-                
-                const aopts = appointments.map(x => `<option value="${x.prospect_id}">${x.prospect_name}</option>`).join('');
-                document.getElementById('ip').innerHTML = '<option value="">Selecciona...</option>' + aopts;
-            }catch(e){showMsg('Error cargando: ' + e.message, 'error');}
+        function updateUI(){
+            const p=db.prospects.filter(x=>x.vendor===user.code);
+            const c=db.calls.filter(x=>x.vendor===user.code);
+            const a=db.appointments.filter(x=>x.vendor===user.code);
+            const i=db.infos.filter(x=>x.vendor===user.code);
+            const cl=db.closures.filter(x=>x.vendor===user.code);
+            
+            document.getElementById('pros-list').innerHTML=p.length?p.map(x=>`<div class="item"><h4>${x.name}</h4><p>Tel: ${x.phone}</p></div>`).join(''):'<div class="empty">Sin prospectos</div>';
+            document.getElementById('calls-list').innerHTML=c.length?c.map(x=>`<div class="item"><h4>${x.pname}</h4><p>${x.result}</p></div>`).join(''):'<div class="empty">Sin llamadas</div>';
+            document.getElementById('apt-list').innerHTML=a.length?a.map(x=>`<div class="item"><h4>${x.pname}</h4><p>${x.date} ${x.time} (${x.type})</p></div>`).join(''):'<div class="empty">Sin citas</div>';
+            document.getElementById('info-list').innerHTML=i.length?i.map(x=>`<div class="item"><h4>${x.pname}</h4><p>${x.result}</p></div>`).join(''):'<div class="empty">Sin infos</div>';
+            document.getElementById('close-list').innerHTML=cl.length?cl.map(x=>`<div class="item"><h4>${x.pname}</h4><p>${x.type}${x.type==='Inscripción'?` - Plan ${x.plan}`:` - $${x.amount}`}</p></div>`).join(''):'<div class="empty">Sin cierres</div>';
+            
+            const popts=p.map(x=>`<option value="${x.id}">${x.name}</option>`).join('');
+            document.getElementById('cp').innerHTML='<option value="">Selecciona...</option>'+popts;
+            document.getElementById('ap').innerHTML='<option value="">Selecciona...</option>'+popts;
+            document.getElementById('clp').innerHTML='<option value="">Selecciona...</option>'+popts;
+            
+            const aopts=a.map(x=>`<option value="${x.pid}">${x.pname}</option>`).join('');
+            document.getElementById('ip').innerHTML='<option value="">Selecciona...</option>'+aopts;
         }
         
-        async function loadAdmin(){
+        function loadAdmin(){
+            let html='';
+            db.vendors.forEach(v=>{
+                const vp=db.prospects.filter(x=>x.vendor===v.code).length;
+                const vc=db.closures.filter(x=>x.vendor===v.code).length;
+                const pct=vp>0?Math.round((vc/vp)*100):0;
+                html+=`<tr><td>${v.name}</td><td>${vp}</td><td>${vc}</td><td>${pct}%</td></tr>`;
+            });
+            document.getElementById('admin-table').innerHTML=html||'<tr><td colspan="4" class="empty">Sin vendedores</td></tr>';
+        }
+        
+        function exportData(){
+            const code=btoa(JSON.stringify(db));
+            document.getElementById('export-box').innerHTML=`<div class="sync-code">📋 Código:<br>${code}</div><p style="font-size:11px;color:#999">Copia este código y comparte con otros dispositivos para sincronizar datos</p>`;
+        }
+        
+        function showImportForm(){
+            document.getElementById('import-box').style.display=document.getElementById('import-box').style.display==='none'?'block':'none';
+        }
+        
+        function importData(){
             try{
-                const {data:vendors, error:vendorError} = await db.from('vendors').select('*');
-                if(vendorError) throw vendorError;
-                
-                let html = '';
-                
-                if(vendors && vendors.length > 0){
-                    for(const v of vendors){
-                        const {data:vp} = await db.from('prospects').select('id').eq('vendor', v.code);
-                        const {data:vc} = await db.from('closures').select('id').eq('vendor', v.code);
-                        const pct = (vp?.length || 0) > 0 ? Math.round(((vc?.length || 0) / vp.length) * 100) : 0;
-                        html += `<tr><td>${v.name}</td><td>${vp?.length || 0}</td><td>${vc?.length || 0}</td><td>${pct}%</td></tr>`;
-                    }
-                    document.getElementById('admin-table').innerHTML = html;
-                } else {
-                    document.getElementById('admin-table').innerHTML = '<tr><td colspan="4" class="empty">Sin vendedores</td></tr>';
+                const code=document.getElementById('import-data').value.trim();
+                const imported=JSON.parse(atob(code));
+                if(imported.vendors&&imported.prospects){
+                    db=imported;
+                    save();
+                    showMsg('✓ Datos importados','success');
+                    loadAdmin();
+                    document.getElementById('import-box').style.display='none';
+                    document.getElementById('import-data').value='';
+                }else{
+                    showMsg('Código inválido','error');
                 }
             }catch(e){
-                console.error(e);
-                showMsg('Error: ' + e.message, 'error');
-                document.getElementById('admin-table').innerHTML = '<tr><td colspan="4" class="empty">Error cargando</td></tr>';
+                showMsg('Error: '+e.message,'error');
             }
         }
         
         function logout(){
-            user = null;
+            user=null;
             document.getElementById('login').classList.add('active');
             document.getElementById('app').classList.remove('active');
-            document.getElementById('vname').value = '';
-            document.getElementById('vcode').value = '';
-            document.getElementById('apass').value = '';
+            document.getElementById('vname').value='';
+            document.getElementById('vcode').value='';
+            document.getElementById('apass').value='';
         }
         
-        function showMsg(m, t){
-            const msg = document.getElementById('msg');
-            msg.textContent = m;
-            msg.className = 'msg show ' + t;
-            setTimeout(() => msg.classList.remove('show'), 3000);
+        function showMsg(m,t){
+            const msg=document.getElementById('msg');
+            msg.textContent=m;
+            msg.className='msg show '+t;
+            setTimeout(()=>msg.classList.remove('show'),3000);
         }
     </script>
 </body>
