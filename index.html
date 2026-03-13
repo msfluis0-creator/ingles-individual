@@ -2,153 +2,420 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Ingles individual</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f5f5f5;height:100vh;overflow:hidden}
-        .login-screen{display:flex;justify-content:center;align-items:center;height:100vh;background:#f5f5f5;padding:20px}
-        .login-screen.hidden{display:none}
-        .card{background:white;border-radius:20px;padding:40px;width:100%;max-width:400px;box-shadow:0 10px 40px rgba(0,0,0,0.1)}
-        .card h1{font-size:24px;font-weight:700;text-align:center;margin-bottom:8px}
-        .card p{color:#999;text-align:center;margin-bottom:30px;font-size:14px}
-        .tabs{display:flex;gap:8px;margin-bottom:25px;border-bottom:1px solid #e5e5ea}
-        .tabs button{flex:1;padding:12px;background:0;border:0;font-weight:600;font-size:14px;cursor:pointer;color:#999;border-bottom:3px solid transparent}
-        .tabs button.active{color:#007AFF;border-bottom-color:#007AFF}
-        .login-mode{display:none}
-        .login-mode.active{display:block}
-        .form-group{margin-bottom:16px}
-        .form-group label{display:block;font-weight:600;margin-bottom:8px;font-size:13px}
-        .form-group input,.form-group select{width:100%;padding:12px;border:1px solid #e5e5ea;border-radius:12px;font-size:14px}
-        .form-group input:focus,.form-group select:focus{outline:0;border-color:#007AFF;box-shadow:0 0 0 3px rgba(0,122,255,0.1)}
-        .btn{width:100%;padding:14px;background:#007AFF;color:white;border:0;border-radius:12px;font-weight:600;cursor:pointer;font-size:14px}
-        .btn:active{opacity:0.8}
-        .app{display:none;height:100vh;flex-direction:column}
-        .app.active{display:flex}
-        .topbar{background:white;padding:12px 16px;border-bottom:1px solid #e5e5ea;display:flex;justify-content:space-between;align-items:center}
-        .topbar h2{font-size:16px;font-weight:700}
-        .topbar-right{text-align:right}
-        .topbar-user{font-size:13px;font-weight:600}
-        .logout-btn{padding:6px 12px;background:#ff3b30;color:white;border:0;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;margin-top:4px}
-        .nav-tabs{display:flex;gap:0;border-bottom:1px solid #e5e5ea;overflow-x:auto;background:white}
-        .nav-tabs button{flex-shrink:0;padding:12px 14px;background:0;border:0;font-weight:500;font-size:12px;cursor:pointer;color:#999;border-bottom:3px solid transparent;white-space:nowrap}
-        .nav-tabs button.active{color:#007AFF;border-bottom-color:#007AFF}
-        .content{flex:1;overflow-y:auto;padding:12px}
-        .section{background:white;border-radius:12px;padding:16px;margin-bottom:12px;border:1px solid #e5e5ea}
-        .section h3{font-size:15px;font-weight:700;margin-bottom:16px}
-        .form-group{margin-bottom:12px}
-        .item{background:#f5f5f5;border-radius:12px;padding:12px;margin-bottom:12px;border-left:4px solid #007AFF}
-        .item h4{font-size:13px;font-weight:600;margin-bottom:4px}
-        .item p{font-size:12px;color:#999;margin:2px 0}
-        .msg{padding:12px;border-radius:12px;margin-bottom:12px;display:none;font-size:13px;font-weight:600}
-        .msg.show{display:block}
-        .msg.success{background:#d1fae5;color:#065f46}
-        .msg.error{background:#fee2e2;color:#991b1b}
-        .tab-pane{display:none}
-        .tab-pane.active{display:block}
-        table{width:100%;border-collapse:collapse;font-size:12px}
-        table th{background:#f5f5f5;padding:10px;text-align:left;font-weight:600;border-bottom:1px solid #e5e5ea}
-        table td{padding:10px;border-bottom:1px solid #e5e5ea}
-        table tr:hover{background:#f5f5f5}
-        .loading{text-align:center;color:#999;padding:20px}
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            z-index: 100;
+        }
+        
+        .screen.active {
+            display: flex;
+        }
+        
+        /* LOGIN SCREEN */
+        .login {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .login-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px 30px;
+            width: 100%;
+            max-width: 320px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        .login-card h1 {
+            font-size: 28px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+        
+        .login-card p {
+            color: #999;
+            text-align: center;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+        
+        .login-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #e5e5ea;
+        }
+        
+        .login-tabs button {
+            flex: 1;
+            padding: 12px;
+            background: none;
+            border: none;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            color: #999;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+        }
+        
+        .login-tabs button.active {
+            color: #007AFF;
+            border-bottom-color: #007AFF;
+        }
+        
+        .login-mode {
+            display: none;
+        }
+        
+        .login-mode.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e5e5ea;
+            border-radius: 12px;
+            font-size: 16px;
+            font-family: inherit;
+        }
+        
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #007AFF;
+            box-shadow: 0 0 0 3px rgba(0,122,255,0.1);
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: #007AFF;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 15px;
+            font-family: inherit;
+            margin-bottom: 12px;
+        }
+        
+        .btn:active {
+            opacity: 0.8;
+        }
+        
+        /* APP SCREEN */
+        .app {
+            background: white;
+        }
+        
+        .app-header {
+            background: white;
+            padding: 12px 16px;
+            border-bottom: 1px solid #e5e5ea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        
+        .app-header h2 {
+            font-size: 18px;
+            font-weight: 700;
+        }
+        
+        .app-header-right {
+            text-align: right;
+        }
+        
+        .app-user {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .logout-btn {
+            padding: 6px 12px;
+            background: #ff3b30;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            font-family: inherit;
+        }
+        
+        .app-tabs {
+            display: flex;
+            gap: 0;
+            border-bottom: 1px solid #e5e5ea;
+            overflow-x: auto;
+            background: white;
+            flex-shrink: 0;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .app-tabs button {
+            flex-shrink: 0;
+            padding: 12px 14px;
+            background: none;
+            border: none;
+            font-weight: 500;
+            font-size: 12px;
+            cursor: pointer;
+            color: #999;
+            border-bottom: 3px solid transparent;
+            white-space: nowrap;
+            font-family: inherit;
+        }
+        
+        .app-tabs button.active {
+            color: #007AFF;
+            border-bottom-color: #007AFF;
+        }
+        
+        .app-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            border: 1px solid #e5e5ea;
+        }
+        
+        .section h3 {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+        
+        .form-group {
+            margin-bottom: 12px;
+        }
+        
+        .item {
+            background: #f5f5f5;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 12px;
+            border-left: 4px solid #007AFF;
+        }
+        
+        .item h4 {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .item p {
+            font-size: 12px;
+            color: #999;
+            margin: 2px 0;
+        }
+        
+        .msg {
+            padding: 12px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            display: none;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        
+        .msg.show {
+            display: block;
+        }
+        
+        .msg.success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .msg.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .tab-pane {
+            display: none;
+        }
+        
+        .tab-pane.active {
+            display: block;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        
+        table th {
+            background: #f5f5f5;
+            padding: 10px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 1px solid #e5e5ea;
+        }
+        
+        table td {
+            padding: 10px;
+            border-bottom: 1px solid #e5e5ea;
+        }
+        
+        table tr:hover {
+            background: #f5f5f5;
+        }
+        
+        .empty {
+            color: #999;
+            font-size: 12px;
+            text-align: center;
+            padding: 20px;
+        }
     </style>
 </head>
 <body>
     <!-- LOGIN -->
-    <div class="login-screen" id="login">
-        <div class="card">
-            <h1>📊 Ingles individual</h1>
-            <p>Dashboard de Ventas</p>
-
-            <div class="tabs">
-                <button class="tabs-btn active" data-mode="vendor">Vendedor</button>
-                <button class="tabs-btn" data-mode="admin">Admin</button>
+    <div class="screen login active" id="login">
+        <div class="login-card">
+            <h1>📊 Ingles</h1>
+            <p>Dashboard Ventas</p>
+            
+            <div class="login-tabs">
+                <button class="active" onclick="switchLoginMode('vendor')">Vendedor</button>
+                <button onclick="switchLoginMode('admin')">Admin</button>
             </div>
-
-            <div class="login-mode active" id="vendor-login">
+            
+            <div class="login-mode active" id="vendor-mode">
                 <div class="form-group">
                     <label>Nombre</label>
-                    <input type="text" id="vname" placeholder="Tu nombre">
+                    <input type="text" id="v-name" placeholder="Tu nombre">
                 </div>
                 <div class="form-group">
                     <label>Código</label>
-                    <input type="text" id="vcode" placeholder="Código">
+                    <input type="text" id="v-code" placeholder="Código">
                 </div>
-                <button class="btn" id="login-vendor-btn">Entrar como Vendedor</button>
+                <button class="btn" onclick="loginVendor()">Entrar</button>
             </div>
-
-            <div class="login-mode" id="admin-login">
+            
+            <div class="login-mode" id="admin-mode">
                 <div class="form-group">
                     <label>Contraseña</label>
-                    <input type="password" id="apass" placeholder="">
+                    <input type="password" id="a-pass" placeholder="">
                 </div>
-                <button class="btn" id="login-admin-btn">Entrar como Admin</button>
+                <button class="btn" onclick="loginAdmin()">Entrar</button>
             </div>
         </div>
     </div>
-
+    
     <!-- APP -->
-    <div class="app" id="app">
-        <div class="topbar">
+    <div class="screen app" id="app">
+        <div class="app-header">
             <h2>📊</h2>
-            <div class="topbar-right">
-                <div class="topbar-user" id="user-display"></div>
-                <button class="logout-btn" id="logout-btn">Salir</button>
+            <div class="app-header-right">
+                <div class="app-user" id="user-name"></div>
+                <button class="logout-btn" onclick="logout()">Salir</button>
             </div>
         </div>
-
-        <div class="nav-tabs" id="nav-tabs">
-            <button class="nav-btn active" data-tab="register">+ Registrar</button>
-            <button class="nav-btn" data-tab="prospects">👥 Prospectos</button>
-            <button class="nav-btn" data-tab="calls">☎️ Llamadas</button>
-            <button class="nav-btn" data-tab="appointments">📅 Citas</button>
-            <button class="nav-btn" data-tab="infos">📋 Infos</button>
-            <button class="nav-btn" data-tab="closures">✓ Cierres</button>
+        
+        <div class="app-tabs" id="app-tabs">
+            <button class="active" onclick="goTab('register')">+ Reg</button>
+            <button onclick="goTab('prospects')">👥 Pros</button>
+            <button onclick="goTab('calls')">☎️ Llam</button>
+            <button onclick="goTab('appointments')">📅 Citas</button>
+            <button onclick="goTab('infos')">📋 Infos</button>
+            <button onclick="goTab('closures')">✓ Cier</button>
         </div>
-
-        <div class="content">
+        
+        <div class="app-content">
             <!-- REGISTER -->
             <div id="register" class="tab-pane active">
                 <div class="section">
                     <div class="msg" id="msg"></div>
                     <h3>Nuevo Prospecto</h3>
-                    <form id="form-prospect">
+                    <form onsubmit="addProspect(event)">
                         <div class="form-group">
                             <label>Nombre</label>
-                            <input type="text" id="p-name" required placeholder="Nombre completo">
+                            <input type="text" id="p-name" required>
                         </div>
                         <div class="form-group">
                             <label>Teléfono</label>
-                            <input type="text" id="p-phone" required placeholder="123456789">
+                            <input type="text" id="p-phone" required>
                         </div>
-                        <button type="submit" class="btn">Registrar Prospecto</button>
+                        <button type="submit" class="btn">Registrar</button>
                     </form>
                 </div>
             </div>
-
+            
             <!-- PROSPECTS -->
             <div id="prospects" class="tab-pane">
                 <div class="section">
                     <h3>Mis Prospectos</h3>
-                    <div id="prospects-list" class="loading">Cargando...</div>
+                    <div id="prospects-list"></div>
                 </div>
             </div>
-
+            
             <!-- CALLS -->
             <div id="calls" class="tab-pane">
                 <div class="section">
                     <h3>Registrar Llamada</h3>
-                    <form id="form-call">
+                    <form onsubmit="addCall(event)">
                         <div class="form-group">
                             <label>Prospecto</label>
-                            <select id="call-prospect" required>
+                            <select id="call-p" required>
                                 <option value="">Selecciona...</option>
                             </select>
                         </div>
                         <div class="form-group">
                             <label>Resultado</label>
-                            <select id="call-result" required>
+                            <select id="call-r" required>
                                 <option value="">Selecciona...</option>
                                 <option value="Colgó">Colgó</option>
                                 <option value="Llamar después">Llamar después</option>
@@ -156,33 +423,33 @@
                                 <option value="No responde">No responde</option>
                             </select>
                         </div>
-                        <button type="submit" class="btn">Registrar Llamada</button>
+                        <button type="submit" class="btn">Registrar</button>
                     </form>
                 </div>
                 <div class="section">
-                    <h3>Historial de Llamadas</h3>
-                    <div id="calls-list" class="loading">Cargando...</div>
+                    <h3>Historial</h3>
+                    <div id="calls-list"></div>
                 </div>
             </div>
-
+            
             <!-- APPOINTMENTS -->
             <div id="appointments" class="tab-pane">
                 <div class="section">
                     <h3>Agendar Cita</h3>
-                    <form id="form-appointment">
+                    <form onsubmit="addAppointment(event)">
                         <div class="form-group">
-                            <label>Prospecto (Citado)</label>
-                            <select id="apt-prospect" required>
+                            <label>Prospecto</label>
+                            <select id="apt-p" required>
                                 <option value="">Selecciona...</option>
                             </select>
                         </div>
                         <div class="form-group">
                             <label>Fecha</label>
-                            <input type="date" id="apt-date" required>
+                            <input type="date" id="apt-d" required>
                         </div>
                         <div class="form-group">
                             <label>Hora</label>
-                            <input type="time" id="apt-time" required>
+                            <input type="time" id="apt-t" required>
                         </div>
                         <div class="form-group">
                             <label>Tipo</label>
@@ -192,66 +459,66 @@
                                 <option value="Virtual">Virtual</option>
                             </select>
                         </div>
-                        <button type="submit" class="btn">Agendar Cita</button>
+                        <button type="submit" class="btn">Agendar</button>
                     </form>
                 </div>
                 <div class="section">
                     <h3>Mis Citas</h3>
-                    <div id="appointments-list" class="loading">Cargando...</div>
+                    <div id="appointments-list"></div>
                 </div>
             </div>
-
+            
             <!-- INFOS -->
             <div id="infos" class="tab-pane">
                 <div class="section">
-                    <h3>Registrar Información</h3>
-                    <form id="form-info">
+                    <h3>Registrar Info</h3>
+                    <form onsubmit="addInfo(event)">
                         <div class="form-group">
-                            <label>Prospecto (Con cita)</label>
-                            <select id="info-prospect" required>
+                            <label>Prospecto</label>
+                            <select id="info-p" required>
                                 <option value="">Selecciona...</option>
                             </select>
                         </div>
                         <div class="form-group">
                             <label>Resultado</label>
-                            <select id="info-result" required>
+                            <select id="info-r" required>
                                 <option value="">Selecciona...</option>
                                 <option value="Inscripción">Inscripción</option>
                                 <option value="Promesa">Promesa</option>
                                 <option value="Apartado">Apartado</option>
                             </select>
                         </div>
-                        <button type="submit" class="btn">Registrar Info</button>
+                        <button type="submit" class="btn">Registrar</button>
                     </form>
                 </div>
                 <div class="section">
-                    <h3>Informaciones Dadas</h3>
-                    <div id="infos-list" class="loading">Cargando...</div>
+                    <h3>Registradas</h3>
+                    <div id="infos-list"></div>
                 </div>
             </div>
-
+            
             <!-- CLOSURES -->
             <div id="closures" class="tab-pane">
                 <div class="section">
                     <h3>Registrar Cierre</h3>
-                    <form id="form-closure">
+                    <form onsubmit="addClosure(event)">
                         <div class="form-group">
                             <label>Prospecto</label>
-                            <select id="closure-prospect" required>
+                            <select id="clos-p" required>
                                 <option value="">Selecciona...</option>
                             </select>
                         </div>
                         <div class="form-group">
                             <label>Tipo</label>
-                            <select id="closure-type" required>
+                            <select id="clos-t" required onchange="showClosureFields()">
                                 <option value="">Selecciona...</option>
                                 <option value="Inscripción">Inscripción</option>
                                 <option value="Apartado">Apartado</option>
                             </select>
                         </div>
-                        <div class="form-group" id="plan-field" style="display:none">
+                        <div class="form-group" id="plan-f" style="display:none">
                             <label>Plan</label>
-                            <select id="closure-plan">
+                            <select id="clos-plan">
                                 <option value="A">A</option>
                                 <option value="AMSI">AMSI</option>
                                 <option value="B">B</option>
@@ -261,326 +528,300 @@
                                 <option value="F">F</option>
                             </select>
                         </div>
-                        <div class="form-group" id="amount-field" style="display:none">
+                        <div class="form-group" id="amt-f" style="display:none">
                             <label>Monto</label>
-                            <input type="number" id="closure-amount" min="0" step="0.01">
+                            <input type="number" id="clos-amt" min="0" step="0.01">
                         </div>
-                        <button type="submit" class="btn">Registrar Cierre</button>
+                        <button type="submit" class="btn">Registrar</button>
                     </form>
                 </div>
                 <div class="section">
-                    <h3>Cierres Registrados</h3>
-                    <div id="closures-list" class="loading">Cargando...</div>
+                    <h3>Registrados</h3>
+                    <div id="closures-list"></div>
                 </div>
             </div>
-
+            
             <!-- ADMIN -->
-            <div id="admin" class="tab-pane">
+            <div id="admin" class="tab-pane" style="display:none">
                 <div class="section">
                     <h3>Crear Vendedor</h3>
-                    <form id="form-vendor">
+                    <form onsubmit="addVendor(event)">
                         <div class="form-group">
                             <label>Nombre</label>
-                            <input type="text" id="vendor-name" required placeholder="Nombre completo">
+                            <input type="text" id="new-vname" required>
                         </div>
                         <div class="form-group">
                             <label>Código</label>
-                            <input type="text" id="vendor-code" required placeholder="Ej: 001">
+                            <input type="text" id="new-vcode" required>
                         </div>
-                        <button type="submit" class="btn">Crear Vendedor</button>
+                        <button type="submit" class="btn">Crear</button>
                     </form>
                 </div>
                 <div class="section">
-                    <h3>Métricas por Vendedor</h3>
+                    <h3>Métricas</h3>
                     <table>
                         <thead>
                             <tr>
                                 <th>Vendedor</th>
-                                <th>Prospectos</th>
-                                <th>Cierres</th>
-                                <th>% Cierre</th>
+                                <th>Pros</th>
+                                <th>Cier</th>
+                                <th>%</th>
                             </tr>
                         </thead>
-                        <tbody id="admin-table">
-                            <tr><td colspan="4" class="loading">Cargando...</td></tr>
-                        </tbody>
+                        <tbody id="admin-table"></tbody>
                     </table>
                 </div>
             </div>
         </div>
     </div>
-
+    
     <script>
         const SUPABASE_URL = 'https://yduipgjijwepkwlcvntc.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_JVByUBRj-6ixEbRNGHAbPQ_MqyjSLt9';
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         
         let currentUser = null;
-
-        async function initDB() {
-            try {
-                await supabase.from('vendors').select('*').limit(1);
-            } catch (e) {
-                console.log('Tables will be created on first use');
-            }
+        
+        function switchLoginMode(mode) {
+            document.querySelectorAll('.login-tabs button').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.login-mode').forEach(m => m.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(mode + '-mode').classList.add('active');
         }
-
-        // Tab switching in login
-        document.querySelectorAll('.tabs-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                document.querySelectorAll('.tabs-btn').forEach(b => b.classList.remove('active'));
-                document.querySelectorAll('.login-mode').forEach(m => m.classList.remove('active'));
-                this.classList.add('active');
-                const mode = this.dataset.mode;
-                document.getElementById(mode + '-login').classList.add('active');
-            });
-        });
-
-        // Login
-        document.getElementById('login-vendor-btn').addEventListener('click', async function() {
-            const name = document.getElementById('vname').value.trim();
-            const code = document.getElementById('vcode').value.trim();
+        
+        async function loginVendor() {
+            const name = document.getElementById('v-name').value.trim();
+            const code = document.getElementById('v-code').value.trim();
             if (!name || !code) {
-                alert('Completa los campos');
+                showMsg('Completa los campos', 'error');
                 return;
             }
             try {
-                const { data, error } = await supabase.from('vendors').select('*').eq('code', code);
-                if (error || !data || data.length === 0) {
-                    alert('Código incorrecto');
+                const { data } = await supabase.from('vendors').select('*').eq('code', code);
+                if (!data || data.length === 0) {
+                    showMsg('Código incorrecto', 'error');
                     return;
                 }
                 currentUser = { name, code, type: 'vendor' };
                 showApp();
             } catch (e) {
-                alert('Error: ' + e.message);
+                showMsg('Error: ' + e.message, 'error');
             }
-        });
-
-        document.getElementById('login-admin-btn').addEventListener('click', function() {
-            if (document.getElementById('apass').value !== 'admin123') {
-                alert('Contraseña incorrecta');
+        }
+        
+        function loginAdmin() {
+            if (document.getElementById('a-pass').value !== 'admin123') {
+                showMsg('Contraseña incorrecta', 'error');
                 return;
             }
             currentUser = { name: 'Admin', type: 'admin' };
             showApp();
-        });
-
+        }
+        
         function showApp() {
-            document.getElementById('login').classList.add('hidden');
+            document.getElementById('login').classList.remove('active');
             document.getElementById('app').classList.add('active');
-            document.getElementById('user-display').textContent = currentUser.name;
+            document.getElementById('user-name').textContent = currentUser.name;
             
-            if (currentUser.type === 'vendor') {
-                document.getElementById('nav-tabs').style.display = 'flex';
-                loadVendorData();
-            } else {
-                document.getElementById('nav-tabs').style.display = 'none';
+            if (currentUser.type === 'admin') {
+                document.getElementById('app-tabs').style.display = 'none';
+                document.getElementById('admin').style.display = 'block';
                 loadAdminData();
-                showTab('admin');
+            } else {
+                loadData();
             }
         }
-
-        // Tab navigation
-        document.querySelectorAll('.nav-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                showTab(this.dataset.tab);
-            });
-        });
-
-        function showTab(tabName) {
+        
+        function goTab(name) {
             document.querySelectorAll('.tab-pane').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(tabName).classList.add('active');
-            document.querySelector(`[data-tab="${tabName}"]`)?.classList.add('active');
+            document.querySelectorAll('.app-tabs button').forEach(b => b.classList.remove('active'));
+            document.getElementById(name).classList.add('active');
+            event.target.classList.add('active');
+            if (name !== 'register') loadData();
         }
-
-        // Forms
-        document.getElementById('form-prospect').addEventListener('submit', async function(e) {
+        
+        async function addProspect(e) {
             e.preventDefault();
             try {
-                const { error } = await supabase.from('prospects').insert([{
+                await supabase.from('prospects').insert([{
                     vendor: currentUser.code,
                     name: document.getElementById('p-name').value.trim(),
                     phone: document.getElementById('p-phone').value.trim()
                 }]);
-                if (error) throw error;
                 showMsg('✓ Prospecto registrado', 'success');
-                this.reset();
-                loadVendorData();
+                e.target.reset();
+                loadData();
             } catch (e) {
                 showMsg('Error: ' + e.message, 'error');
             }
-        });
-
-        document.getElementById('form-call').addEventListener('submit', async function(e) {
+        }
+        
+        async function addCall(e) {
             e.preventDefault();
             try {
-                const pid = document.getElementById('call-prospect').value;
+                const pid = document.getElementById('call-p').value;
                 const { data: pdata } = await supabase.from('prospects').select('name').eq('id', pid);
-                if (!pdata || pdata.length === 0) {
-                    alert('Selecciona prospecto');
+                if (!pdata || !pdata[0]) {
+                    showMsg('Selecciona prospecto', 'error');
                     return;
                 }
-                const { error } = await supabase.from('calls').insert([{
+                await supabase.from('calls').insert([{
                     vendor: currentUser.code,
                     prospect_id: pid,
                     prospect_name: pdata[0].name,
-                    result: document.getElementById('call-result').value
+                    result: document.getElementById('call-r').value
                 }]);
-                if (error) throw error;
                 showMsg('✓ Llamada registrada', 'success');
-                this.reset();
-                loadVendorData();
+                e.target.reset();
+                loadData();
             } catch (e) {
                 showMsg('Error: ' + e.message, 'error');
             }
-        });
-
-        document.getElementById('form-appointment').addEventListener('submit', async function(e) {
+        }
+        
+        async function addAppointment(e) {
             e.preventDefault();
             try {
-                const pid = document.getElementById('apt-prospect').value;
+                const pid = document.getElementById('apt-p').value;
                 const { data: pdata } = await supabase.from('prospects').select('name').eq('id', pid);
-                if (!pdata || pdata.length === 0) {
-                    alert('Selecciona prospecto');
+                if (!pdata || !pdata[0]) {
+                    showMsg('Selecciona prospecto', 'error');
                     return;
                 }
-                const { error } = await supabase.from('appointments').insert([{
+                await supabase.from('appointments').insert([{
                     vendor: currentUser.code,
                     prospect_id: pid,
                     prospect_name: pdata[0].name,
-                    date: document.getElementById('apt-date').value,
-                    time: document.getElementById('apt-time').value,
+                    date: document.getElementById('apt-d').value,
+                    time: document.getElementById('apt-t').value,
                     type: document.getElementById('apt-type').value
                 }]);
-                if (error) throw error;
                 showMsg('✓ Cita agendada', 'success');
-                this.reset();
-                loadVendorData();
+                e.target.reset();
+                loadData();
             } catch (e) {
                 showMsg('Error: ' + e.message, 'error');
             }
-        });
-
-        document.getElementById('form-info').addEventListener('submit', async function(e) {
+        }
+        
+        async function addInfo(e) {
             e.preventDefault();
             try {
-                const pid = document.getElementById('info-prospect').value;
+                const pid = document.getElementById('info-p').value;
                 const { data: pdata } = await supabase.from('prospects').select('name').eq('id', pid);
-                if (!pdata || pdata.length === 0) {
-                    alert('Selecciona prospecto');
+                if (!pdata || !pdata[0]) {
+                    showMsg('Selecciona prospecto', 'error');
                     return;
                 }
-                const { error } = await supabase.from('infos').insert([{
+                await supabase.from('infos').insert([{
                     vendor: currentUser.code,
                     prospect_id: pid,
                     prospect_name: pdata[0].name,
-                    result: document.getElementById('info-result').value
+                    result: document.getElementById('info-r').value
                 }]);
-                if (error) throw error;
                 showMsg('✓ Info registrada', 'success');
-                this.reset();
-                loadVendorData();
+                e.target.reset();
+                loadData();
             } catch (e) {
                 showMsg('Error: ' + e.message, 'error');
             }
-        });
-
-        document.getElementById('closure-type').addEventListener('change', function() {
-            document.getElementById('plan-field').style.display = this.value === 'Inscripción' ? 'block' : 'none';
-            document.getElementById('amount-field').style.display = this.value === 'Apartado' ? 'block' : 'none';
-        });
-
-        document.getElementById('form-closure').addEventListener('submit', async function(e) {
+        }
+        
+        function showClosureFields() {
+            const type = document.getElementById('clos-t').value;
+            document.getElementById('plan-f').style.display = type === 'Inscripción' ? 'block' : 'none';
+            document.getElementById('amt-f').style.display = type === 'Apartado' ? 'block' : 'none';
+        }
+        
+        async function addClosure(e) {
             e.preventDefault();
             try {
-                const pid = document.getElementById('closure-prospect').value;
+                const pid = document.getElementById('clos-p').value;
                 const { data: pdata } = await supabase.from('prospects').select('name').eq('id', pid);
-                if (!pdata || pdata.length === 0) {
-                    alert('Selecciona prospecto');
+                if (!pdata || !pdata[0]) {
+                    showMsg('Selecciona prospecto', 'error');
                     return;
                 }
-                const { error } = await supabase.from('closures').insert([{
+                const type = document.getElementById('clos-t').value;
+                await supabase.from('closures').insert([{
                     vendor: currentUser.code,
                     prospect_id: pid,
                     prospect_name: pdata[0].name,
-                    type: document.getElementById('closure-type').value,
-                    plan: document.getElementById('closure-type').value === 'Inscripción' ? document.getElementById('closure-plan').value : null,
-                    amount: document.getElementById('closure-type').value === 'Apartado' ? parseFloat(document.getElementById('closure-amount').value) || 0 : 0
+                    type: type,
+                    plan: type === 'Inscripción' ? document.getElementById('clos-plan').value : null,
+                    amount: type === 'Apartado' ? parseFloat(document.getElementById('clos-amt').value) || 0 : 0
                 }]);
-                if (error) throw error;
                 showMsg('✓ Cierre registrado', 'success');
-                this.reset();
-                loadVendorData();
+                e.target.reset();
+                loadData();
             } catch (e) {
                 showMsg('Error: ' + e.message, 'error');
             }
-        });
-
-        document.getElementById('form-vendor').addEventListener('submit', async function(e) {
+        }
+        
+        async function addVendor(e) {
             e.preventDefault();
             try {
-                const name = document.getElementById('vendor-name').value.trim();
-                const code = document.getElementById('vendor-code').value.trim();
-                
+                const code = document.getElementById('new-vcode').value.trim();
                 const { data: existing } = await supabase.from('vendors').select('*').eq('code', code);
                 if (existing && existing.length > 0) {
-                    alert('Código ya existe');
+                    showMsg('Código ya existe', 'error');
                     return;
                 }
-                
-                const { error } = await supabase.from('vendors').insert([{ name, code }]);
-                if (error) throw error;
+                await supabase.from('vendors').insert([{
+                    name: document.getElementById('new-vname').value.trim(),
+                    code: code
+                }]);
                 showMsg('✓ Vendedor creado', 'success');
-                this.reset();
+                e.target.reset();
                 loadAdminData();
             } catch (e) {
                 showMsg('Error: ' + e.message, 'error');
             }
-        });
-
-        // Load data
-        async function loadVendorData() {
+        }
+        
+        async function loadData() {
             try {
                 const { data: vp } = await supabase.from('prospects').select('*').eq('vendor', currentUser.code);
                 const { data: vc } = await supabase.from('calls').select('*').eq('vendor', currentUser.code);
                 const { data: va } = await supabase.from('appointments').select('*').eq('vendor', currentUser.code);
                 const { data: vi } = await supabase.from('infos').select('*').eq('vendor', currentUser.code);
                 const { data: vl } = await supabase.from('closures').select('*').eq('vendor', currentUser.code);
-
+                
                 const prospects = vp || [];
                 const calls = vc || [];
                 const appointments = va || [];
                 const infos = vi || [];
                 const closures = vl || [];
-
-                document.getElementById('prospects-list').innerHTML = prospects.length ? prospects.map(x => `<div class="item"><h4>${x.name}</h4><p>Tel: ${x.phone}</p></div>`).join('') : '<p style="color:#999;font-size:12px">Sin prospectos</p>';
                 
-                updateSelects(prospects, appointments);
+                // Prospects
+                document.getElementById('prospects-list').innerHTML = prospects.length ? prospects.map(x => `<div class="item"><h4>${x.name}</h4><p>Tel: ${x.phone}</p></div>`).join('') : '<div class="empty">Sin prospectos</div>';
                 
-                document.getElementById('calls-list').innerHTML = calls.length ? calls.map(x => `<div class="item"><h4>${x.prospect_name}</h4><p>Resultado: ${x.result}</p></div>`).join('') : '<p style="color:#999;font-size:12px">Sin llamadas</p>';
+                // Calls
+                document.getElementById('calls-list').innerHTML = calls.length ? calls.map(x => `<div class="item"><h4>${x.prospect_name}</h4><p>${x.result}</p></div>`).join('') : '<div class="empty">Sin llamadas</div>';
                 
-                document.getElementById('appointments-list').innerHTML = appointments.length ? appointments.map(x => `<div class="item"><h4>${x.prospect_name}</h4><p>${x.date} ${x.time}</p><p>Tipo: ${x.type}</p></div>`).join('') : '<p style="color:#999;font-size:12px">Sin citas</p>';
+                // Appointments
+                document.getElementById('appointments-list').innerHTML = appointments.length ? appointments.map(x => `<div class="item"><h4>${x.prospect_name}</h4><p>${x.date} ${x.time} (${x.type})</p></div>`).join('') : '<div class="empty">Sin citas</div>';
                 
-                document.getElementById('infos-list').innerHTML = infos.length ? infos.map(x => `<div class="item"><h4>${x.prospect_name}</h4><p>Resultado: ${x.result}</p></div>`).join('') : '<p style="color:#999;font-size:12px">Sin infos</p>';
+                // Infos
+                document.getElementById('infos-list').innerHTML = infos.length ? infos.map(x => `<div class="item"><h4>${x.prospect_name}</h4><p>${x.result}</p></div>`).join('') : '<div class="empty">Sin infos</div>';
                 
-                document.getElementById('closures-list').innerHTML = closures.length ? closures.map(x => `<div class="item"><h4>${x.prospect_name}</h4><p>${x.type}${x.type === 'Inscripción' ? ` - Plan ${x.plan}` : ` - $${x.amount}`}</p></div>`).join('') : '<p style="color:#999;font-size:12px">Sin cierres</p>';
+                // Closures
+                document.getElementById('closures-list').innerHTML = closures.length ? closures.map(x => `<div class="item"><h4>${x.prospect_name}</h4><p>${x.type}${x.type === 'Inscripción' ? ` - Plan ${x.plan}` : ` - $${x.amount}`}</p></div>`).join('') : '<div class="empty">Sin cierres</div>';
+                
+                // Update selects
+                const popts = prospects.map(x => `<option value="${x.id}">${x.name}</option>`).join('');
+                document.getElementById('call-p').innerHTML = '<option value="">Selecciona...</option>' + popts;
+                document.getElementById('apt-p').innerHTML = '<option value="">Selecciona...</option>' + popts;
+                document.getElementById('clos-p').innerHTML = '<option value="">Selecciona...</option>' + popts;
+                
+                const aopts = appointments.map(x => `<option value="${x.prospect_id}">${x.prospect_name}</option>`).join('');
+                document.getElementById('info-p').innerHTML = '<option value="">Selecciona...</option>' + aopts;
             } catch (e) {
-                showMsg('Error cargando datos: ' + e.message, 'error');
+                showMsg('Error cargando: ' + e.message, 'error');
             }
         }
-
-        function updateSelects(prospects, appointments) {
-            const popts = prospects.map(x => `<option value="${x.id}">${x.name}</option>`).join('');
-            document.getElementById('call-prospect').innerHTML = '<option value="">Selecciona...</option>' + popts;
-            document.getElementById('apt-prospect').innerHTML = '<option value="">Selecciona...</option>' + popts;
-            document.getElementById('closure-prospect').innerHTML = '<option value="">Selecciona...</option>' + popts;
-            
-            const aopts = appointments.map(x => `<option value="${x.prospect_id}">${x.prospect_name}</option>`).join('');
-            document.getElementById('info-prospect').innerHTML = '<option value="">Selecciona...</option>' + aopts;
-        }
-
+        
         async function loadAdminData() {
             try {
                 const { data: vendors } = await supabase.from('vendors').select('*');
@@ -590,32 +831,30 @@
                     const { data: vp } = await supabase.from('prospects').select('id').eq('vendor', v.code);
                     const { data: vc } = await supabase.from('closures').select('id').eq('vendor', v.code);
                     const pct = (vp?.length || 0) > 0 ? Math.round(((vc?.length || 0) / vp.length) * 100) : 0;
-                    html += `<tr><td>${v.name}</td><td>${vp?.length || 0}</td><td>${vc?.length || 0}</td><td style="color:#007AFF;font-weight:600">${pct}%</td></tr>`;
+                    html += `<tr><td>${v.name}</td><td>${vp?.length || 0}</td><td>${vc?.length || 0}</td><td>${pct}%</td></tr>`;
                 }
-                document.getElementById('admin-table').innerHTML = html || '<tr><td colspan="4" style="text-align:center;color:#999">Sin vendedores</td></tr>';
+                
+                document.getElementById('admin-table').innerHTML = html || '<tr><td colspan="4" class="empty">Sin vendedores</td></tr>';
             } catch (e) {
                 showMsg('Error: ' + e.message, 'error');
             }
         }
-
-        // Logout
-        document.getElementById('logout-btn').addEventListener('click', function() {
+        
+        function logout() {
             currentUser = null;
-            document.getElementById('login').classList.remove('hidden');
+            document.getElementById('login').classList.add('active');
             document.getElementById('app').classList.remove('active');
-            document.getElementById('vname').value = '';
-            document.getElementById('vcode').value = '';
-            document.getElementById('apass').value = '';
-        });
-
+            document.getElementById('v-name').value = '';
+            document.getElementById('v-code').value = '';
+            document.getElementById('a-pass').value = '';
+        }
+        
         function showMsg(m, t) {
             const msg = document.getElementById('msg');
             msg.textContent = m;
             msg.className = 'msg show ' + t;
             setTimeout(() => msg.classList.remove('show'), 3000);
         }
-
-        initDB();
     </script>
 </body>
 </html>
