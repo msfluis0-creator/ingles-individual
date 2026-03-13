@@ -308,20 +308,20 @@
 
     <script>
         let currentUser = null;
-        let vendors = JSON.parse(localStorage.getItem('vendors')) || [];
-        let prospects = JSON.parse(localStorage.getItem('prospects')) || [];
-        let calls = JSON.parse(localStorage.getItem('calls')) || [];
-        let appointments = JSON.parse(localStorage.getItem('appointments')) || [];
-        let infos = JSON.parse(localStorage.getItem('infos')) || [];
-        let closures = JSON.parse(localStorage.getItem('closures')) || [];
+        let vendors = JSON.parse(localStorage.getItem('ii_vendors')) || [];
+        let prospects = JSON.parse(localStorage.getItem('ii_prospects')) || [];
+        let calls = JSON.parse(localStorage.getItem('ii_calls')) || [];
+        let appointments = JSON.parse(localStorage.getItem('ii_appointments')) || [];
+        let infos = JSON.parse(localStorage.getItem('ii_infos')) || [];
+        let closures = JSON.parse(localStorage.getItem('ii_closures')) || [];
 
         function saveData() {
-            localStorage.setItem('vendors', JSON.stringify(vendors));
-            localStorage.setItem('prospects', JSON.stringify(prospects));
-            localStorage.setItem('calls', JSON.stringify(calls));
-            localStorage.setItem('appointments', JSON.stringify(appointments));
-            localStorage.setItem('infos', JSON.stringify(infos));
-            localStorage.setItem('closures', JSON.stringify(closures));
+            localStorage.setItem('ii_vendors', JSON.stringify(vendors));
+            localStorage.setItem('ii_prospects', JSON.stringify(prospects));
+            localStorage.setItem('ii_calls', JSON.stringify(calls));
+            localStorage.setItem('ii_appointments', JSON.stringify(appointments));
+            localStorage.setItem('ii_infos', JSON.stringify(infos));
+            localStorage.setItem('ii_closures', JSON.stringify(closures));
         }
 
         // Tab switching in login
