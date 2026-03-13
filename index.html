@@ -464,18 +464,27 @@
         
         async function loadAdmin(){
             try{
-                const {data:vendors} = await db.from('vendors').select('*');
+                const {data:vendors, error:vendorError} = await db.from('vendors').select('*');
+                if(vendorError) throw vendorError;
+                
                 let html = '';
                 
-                for(const v of (vendors || [])){
-                    const {data:vp} = await db.from('prospects').select('id').eq('vendor', v.code);
-                    const {data:vc} = await db.from('closures').select('id').eq('vendor', v.code);
-                    const pct = (vp?.length || 0) > 0 ? Math.round(((vc?.length || 0) / vp.length) * 100) : 0;
-                    html += `<tr><td>${v.name}</td><td>${vp?.length || 0}</td><td>${vc?.length || 0}</td><td>${pct}%</td></tr>`;
+                if(vendors && vendors.length > 0){
+                    for(const v of vendors){
+                        const {data:vp} = await db.from('prospects').select('id').eq('vendor', v.code);
+                        const {data:vc} = await db.from('closures').select('id').eq('vendor', v.code);
+                        const pct = (vp?.length || 0) > 0 ? Math.round(((vc?.length || 0) / vp.length) * 100) : 0;
+                        html += `<tr><td>${v.name}</td><td>${vp?.length || 0}</td><td>${vc?.length || 0}</td><td>${pct}%</td></tr>`;
+                    }
+                    document.getElementById('admin-table').innerHTML = html;
+                } else {
+                    document.getElementById('admin-table').innerHTML = '<tr><td colspan="4" class="empty">Sin vendedores</td></tr>';
                 }
-                
-                document.getElementById('admin-table').innerHTML = html || '<tr><td colspan="4" class="empty">Sin vendedores</td></tr>';
-            }catch(e){showMsg('Error: ' + e.message, 'error');}
+            }catch(e){
+                console.error(e);
+                showMsg('Error: ' + e.message, 'error');
+                document.getElementById('admin-table').innerHTML = '<tr><td colspan="4" class="empty">Error cargando</td></tr>';
+            }
         }
         
         function logout(){
